@@ -1,118 +1,154 @@
-import { useEffect, useState } from 'react';
-import './App.css';
+import { FormEvent, useEffect, useMemo, useState } from "react"
+import ChromaGrid from "./components/ChromaGrid"
+import "./App.css"
+import { usePerspectives } from "./hooks/usePerspectives"
+import type { PersonaPerspective } from "./hooks/usePerspectives"
+import { usePersonaVoices } from "./hooks/usePersonaVoices"
 
-type TreeElement = {
-  id: number;
-  type: 'text' | 'knot' | 'crack';
-  content?: string;
-  baseOffset: number;
-};
+const suggestionExamples = [
+  "My teammate took credit for a feature I built.",
+  "I had to cancel dinner on a close friend last-minute.",
+  "A stranger helped me when my car broke down on the highway.",
+]
 
 function App() {
-  const [rotation, setRotation] = useState(0);
+  const [input, setInput] = useState("")
+  const [scenario, setScenario] = useState("")
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
-  // Generate tree elements (markings, knots, cracks)
-  const treeElements: TreeElement[] = [
-    { id: 1, type: 'text', content: '🌿', baseOffset: 0 },
-    { id: 2, type: 'knot', baseOffset: 120 },
-    { id: 3, type: 'text', content: '✨', baseOffset: 60 },
-    { id: 4, type: 'crack', baseOffset: 180 },
-    { id: 5, type: 'text', content: '🍃', baseOffset: 240 },
-    { id: 6, type: 'knot', baseOffset: 300 },
-    { id: 7, type: 'text', content: '⭐', baseOffset: 90 },
-    { id: 8, type: 'text', content: '🌱', baseOffset: 150 },
-    { id: 9, type: 'crack', baseOffset: 210 },
-    { id: 10, type: 'text', content: '💫', baseOffset: 270 },
-    { id: 11, type: 'knot', baseOffset: 330 },
-    { id: 12, type: 'text', content: '🌟', baseOffset: 30 },
-  ];
+  const { personas, fetchPerspectives, isLoading, error } = usePerspectives()
+  const { generateVoices, playVoice, unlockAudio, voiceStatus } =
+    usePersonaVoices()
+
+  const handleSubmit = async (value?: string) => {
+    const story = (value ?? input).trim()
+    if (!story) return
+    unlockAudio()
+    setScenario(story)
+    await fetchPerspectives(story)
+    setHasSubmitted(true)
+  }
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    handleSubmit()
+  }
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercentage = scrollPosition / maxScroll;
-      
-      // Rotate tree based on scroll (360 degrees per full scroll)
-      const newRotation = scrollPercentage * 360 * 3; // Multiple rotations
-      setRotation(newRotation);
-    };
+    if (!personas.length || !scenario) return
+    generateVoices(
+      personas.map((persona) => ({
+        id: persona.id,
+        opinion: persona.opinion,
+        voiceId: persona.voiceId,
+      }))
+    )
+  }, [generateVoices, personas, scenario])
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const gridItems = useMemo(
+    () =>
+      personas.map((persona) => ({
+        ...persona,
+      })),
+    [personas]
+  )
 
-  // Generate bark texture lines
-  const barkLines = Array.from({ length: 20 }, (_, i) => (
-    <div
-      key={`bark-${i}`}
-      className="bark-line"
-      style={{
-        top: `${i * 5 + 2}%`,
-        transform: `rotate(${(i % 3) * 2 - 2}deg)`,
-      }}
-    />
-  ));
+  const voicesReady = useMemo(
+    () =>
+      personas.every(
+        (persona) => voiceStatus[persona.id]?.status === "ready"
+      ),
+    [personas, voiceStatus]
+  )
 
   return (
     <div className="app">
-      <div className="tree-crown" />
-      
-      <div className="tree-container">
-        <div className="tree">
-          <div className="tree-trunk">
-            <div className="tree-texture">
-              {barkLines}
+      {!hasSubmitted && (
+        <div className="input-stage">
+          <div className="input-container">
+            <h1 className="main-title">What happened?</h1>
+            <p className="subtitle">
+              Share a moment. We'll show you how different people might see it.
+            </p>
+            
+            <form className="input-form" onSubmit={onSubmit}>
+              <textarea
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="My manager announced my idea as if it were theirs during the all-hands meeting..."
+                rows={5}
+                className="main-input"
+                autoFocus
+              />
               
-              {/* Tree rings with elements that rotate */}
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ringIndex) => (
-                <div
-                  key={`ring-${ringIndex}`}
-                  className="tree-ring"
-                  style={{
-                    top: `${ringIndex * 10}%`,
-                    transform: `rotateY(${rotation + ringIndex * 36}deg)`,
-                  }}
-                >
-                  {treeElements
-                    .filter((_, idx) => idx % 10 === ringIndex)
-                    .map((element) => (
-                      <div
-                        key={element.id}
-                        style={{
-                          transform: `translateZ(${Math.sin((rotation + element.baseOffset) * Math.PI / 180) * 30}px)`,
-                          opacity: 0.5 + Math.sin((rotation + element.baseOffset) * Math.PI / 180) * 0.5,
-                        }}
-                      >
-                        {element.type === 'text' && (
-                          <span className="tree-marking">{element.content}</span>
-                        )}
-                        {element.type === 'knot' && <div className="tree-knot" />}
-                        {element.type === 'crack' && <div className="tree-crack" />}
-                      </div>
-                    ))}
-                </div>
-              ))}
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={isLoading || !input.trim()}
+              >
+                {isLoading ? "Gathering perspectives..." : "Get perspectives →"}
+              </button>
+            </form>
+
+            <div className="examples">
+              <span className="examples-label">or try:</span>
+              <div className="examples-list">
+                {suggestionExamples.map((example) => (
+                  <button
+                    type="button"
+                    key={example}
+                    className="example-btn"
+                    onClick={() => handleSubmit(example)}
+                    disabled={isLoading}
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="tree-roots" />
+      {hasSubmitted && (
+        <div className="results-stage">
+          <div className="results-header">
+            <p className="scenario-text">"{scenario}"</p>
+            <div className="status-line">
+              {isLoading && <span className="status">Collecting viewpoints...</span>}
+              {!isLoading && !voicesReady && (
+                <span className="status">Warming up voices...</span>
+              )}
+              {!isLoading && voicesReady && (
+                <span className="status-ready">Hover a persona to hear their take</span>
+              )}
+            </div>
+          </div>
 
-      <div className="info-panel">
-        <h1>AI Emotions</h1>
-        <p>Scroll to explore the tree of emotions</p>
-        <p style={{ fontSize: '0.9em', marginTop: '10px', color: 'rgba(139, 90, 60, 0.8)' }}>
-          Rotation: {Math.round(rotation)}°
-        </p>
-      </div>
+          <div className="grid-wrapper">
+            <ChromaGrid
+              items={gridItems}
+              radius={340}
+              columns={3}
+              rows={2}
+              onCardEnter={(item) => playVoice(item.id)}
+            />
+          </div>
 
-      <div className="scroll-indicator">
-        ↓ Scroll to rotate the tree ↓
-      </div>
+          <button
+            className="new-scenario-btn"
+            onClick={() => {
+              setHasSubmitted(false)
+              setInput("")
+              setScenario("")
+            }}
+          >
+            Try another scenario
+          </button>
+        </div>
+      )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

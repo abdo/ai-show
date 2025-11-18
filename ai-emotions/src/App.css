@@ -1,177 +1,292 @@
-.app {
-  width: 100%;
-  min-height: 300vh;
-  background: linear-gradient(to bottom, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
-  position: relative;
-  overflow-x: hidden;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.tree-container {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 100vh;
+.app {
+  width: 100%;
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  position: relative;
+}
+
+/* ============================================
+   INPUT STAGE - Centered, minimal
+   ============================================ */
+
+.input-stage {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
-  z-index: 10;
+  padding: 2rem;
+  animation: fadeIn 0.6s ease;
 }
 
-.tree {
-  width: 200px;
-  height: 100%;
-  position: relative;
-  perspective: 1000px;
-}
-
-.tree-trunk {
+.input-container {
+  max-width: 680px;
   width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  background: linear-gradient(
-    to right,
-    #4a2c1a 0%,
-    #6b3e2a 25%,
-    #8b5a3c 50%,
-    #6b3e2a 75%,
-    #4a2c1a 100%
-  );
-  border-radius: 50px;
-  box-shadow: 
-    inset -20px 0 30px rgba(0, 0, 0, 0.5),
-    inset 20px 0 30px rgba(139, 90, 60, 0.3),
-    0 0 50px rgba(0, 0, 0, 0.5);
 }
 
-.tree-texture {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 50px;
+.main-title {
+  font-size: 3.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
-.tree-ring {
-  position: absolute;
+.subtitle {
+  font-size: 1.15rem;
+  color: #888;
+  margin-bottom: 2.5rem;
+  line-height: 1.5;
+}
+
+.input-form {
+  margin-bottom: 2rem;
+}
+
+.main-input {
   width: 100%;
-  height: 60px;
+  min-height: 140px;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.main-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.03);
+}
+
+.main-input::placeholder {
+  color: #555;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.examples {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.examples-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+  text-transform: lowercase;
+}
+
+.examples-list {
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  transform-origin: center;
-  animation: none;
-  transition: transform 0.05s linear;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.tree-marking {
-  font-size: 24px;
-  color: rgba(139, 90, 60, 0.6);
-  text-shadow: 
-    1px 1px 2px rgba(0, 0, 0, 0.8),
-    -1px -1px 2px rgba(200, 150, 100, 0.3);
-  font-weight: bold;
-  user-select: none;
+.example-btn {
+  padding: 0.85rem 1.25rem;
+  font-size: 0.95rem;
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: left;
+  font-family: inherit;
+  line-height: 1.4;
 }
 
-.tree-knot {
-  width: 30px;
-  height: 40px;
-  background: radial-gradient(ellipse, #3a1c0a 0%, #5a2c1a 50%, transparent 80%);
-  border-radius: 50%;
-  opacity: 0.7;
+.example-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  transform: translateX(4px);
 }
 
-.tree-crack {
-  width: 2px;
-  height: 50px;
-  background: linear-gradient(to bottom, transparent, #2a1c0a, transparent);
-  transform: rotate(15deg);
+.example-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-/* Bark texture lines */
-.bark-line {
-  position: absolute;
-  width: 90%;
-  height: 2px;
-  background: rgba(60, 30, 15, 0.4);
-  left: 5%;
+/* ============================================
+   RESULTS STAGE - Grid view
+   ============================================ */
+
+.results-stage {
+  width: 100%;
+  min-height: 100vh;
+  padding: 3rem 2rem;
+  animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.info-panel {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 30, 30, 0.9);
-  padding: 20px 40px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 90, 60, 0.3);
-  z-index: 20;
+.results-header {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.info-panel h1 {
-  font-size: 2.5em;
-  color: #8b5a3c;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+.scenario-text {
+  font-size: 1.35rem;
+  color: #ccc;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  font-style: italic;
 }
 
-.info-panel p {
-  font-size: 1.1em;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 5px 0;
+.status-line {
+  margin-top: 1.5rem;
 }
 
-.scroll-indicator {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(139, 90, 60, 0.8);
-  font-size: 0.9em;
-  animation: bounce 2s infinite;
-  z-index: 19;
+.status {
+  font-size: 0.95rem;
+  color: #888;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-@keyframes bounce {
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  animation: pulse 2s infinite;
+}
+
+.status-ready {
+  font-size: 0.95rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.grid-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.new-scenario-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #888;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.new-scenario-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
   0%, 100% {
-    transform: translateX(-50%) translateY(0);
+    opacity: 1;
   }
   50% {
-    transform: translateX(-50%) translateY(-10px);
+    opacity: 0.4;
   }
 }
 
-/* Decorative elements */
-.tree-crown {
-  position: fixed;
-  top: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  height: 200px;
-  background: radial-gradient(ellipse, rgba(34, 139, 34, 0.3) 0%, transparent 70%);
-  border-radius: 50%;
-  z-index: 5;
-  pointer-events: none;
-}
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 
-.tree-roots {
-  position: fixed;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  height: 200px;
-  background: radial-gradient(ellipse, rgba(74, 44, 26, 0.3) 0%, transparent 70%);
-  border-radius: 50%;
-  z-index: 5;
-  pointer-events: none;
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 2.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .input-stage,
+  .results-stage {
+    padding: 1.5rem;
+  }
+
+  .scenario-text {
+    font-size: 1.1rem;
+  }
 }
