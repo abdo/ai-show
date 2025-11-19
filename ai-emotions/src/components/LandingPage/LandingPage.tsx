@@ -74,7 +74,7 @@ export function LandingPage({ onStartStory }: LandingPageProps) {
               className="story-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe what you're thinking about..."
+              placeholder="I've been working at my company for five years, and I just found out that my younger colleague, who joined last year, is making more than me..."
               rows={4}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {

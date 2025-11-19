@@ -69,26 +69,27 @@ export const availableRoles: CharacterRole[] = [
 
 // Role descriptions for Groq prompt (human-readable explanations)
 export const roleDescriptions: Record<CharacterRole, string> = {
-  empathetic: "warm, understanding, slower speech",
-  analytical: "logical, measured, clear thinking",
-  provocateur: "bold, challenging, faster speech",
-  emotional: "raw, expressive, passionate",
-  calm: "peaceful, soothing, slow",
-  assertive: "confident, direct, slightly fast",
-  skeptical: "questioning, doubtful",
-  optimistic: "hopeful, upbeat, positive",
-  cynical: "pessimistic, dry humor",
-  nurturing: "caring, gentle, slow",
-  intense: "powerful, fierce, fast speech",
-  playful: "lighthearted, fun, quick",
-  serious: "grave, deliberate, slow",
-  wise: "thoughtful, measured, sage-like",
-  rebellious: "defiant, quick, challenging",
-  mediator: "balanced, neutral, peacemaker",
-  challenger: "confrontational, direct",
-  supporter: "encouraging, cheerleader",
-  observer: "detached, watching, slow",
-  wildcard: "unpredictable, varying pace",
+  empathetic:
+    "warm, understanding, compassionate with slower thoughtful speech",
+  analytical: "logical, measured, precise with clear methodical thinking",
+  provocateur: "bold, challenging, stirring with sharp faster speech",
+  emotional: "raw, expressive, passionate with intense heartfelt delivery",
+  calm: "peaceful, soothing, tranquil with slow steady pace",
+  assertive: "confident, direct, commanding with slightly fast delivery",
+  skeptical: "questioning, doubtful, critical with cautious measured tone",
+  optimistic: "hopeful, upbeat, positive with bright enthusiastic energy",
+  cynical: "pessimistic, sarcastic with dark dry humor delivery",
+  nurturing: "caring, gentle, supportive with slow warm pace",
+  intense: "powerful, fierce, focused with fast urgent speech",
+  playful: "lighthearted, fun, teasing with quick lively banter",
+  serious: "grave, deliberate, solemn with slow weighted pace",
+  wise: "thoughtful, measured, insightful with calm sage-like delivery",
+  rebellious: "defiant, quick, challenging with bold provocative energy",
+  mediator: "balanced, neutral, diplomatic with calm peacemaker tone",
+  challenger: "confrontational, direct, pushing with sharp assertive speech",
+  supporter: "encouraging, motivating, uplifting with warm cheerleader energy",
+  observer: "detached, watching, analytical with slow distant pace",
+  wildcard: "unpredictable, spontaneous, erratic with constantly varying pace",
 };
 
 // Voice instructions for each standardized role (for gpt-4o-mini-tts)
@@ -283,6 +284,7 @@ export function usePersonaVoices() {
                 body: JSON.stringify({
                   model: "gpt-4o-mini-tts",
                   voice: voiceId,
+                  speed: 1.1,
                   input: cleanedText,
                   instructions: roleConfig.instructions,
                 }),
@@ -355,7 +357,7 @@ export function usePersonaVoices() {
         };
 
         // Add a small delay for the first audio to prevent cutting off the beginning
-        const playDelay = isFirstAudio ? 100 : 0;
+        const playDelay = isFirstAudio ? 500 : 0;
 
         setTimeout(() => {
           audioElement.play().catch((err) => {

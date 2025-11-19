@@ -1,269 +1,387 @@
-## 1. Project Overview
+# AI Show - Project Rules & Architecture
 
-- This is a **React 18 + Vite + TypeScript** single-page application.
-- Use **functional components + hooks only**. Do **not** use class components.
-- Assume modern browser support (ES2020+), no IE support.
-- Primary goals:
-  - Clean, well-typed code.
-  - Easy-to-navigate file structure.
-  - Small, composable UI components.
+## Project Overview
 
----
+**AI Show** is a React + TypeScript web application that creates cinematic, AI-generated conversations from user situations. It uses:
+- **Groq AI** (`llama-3.3-70b-versatile`) for generating dramatic character dialogues
+- **OpenAI TTS** (`gpt-4o-mini-tts`) for realistic, persona-based voice generation
+- **React 18 + Vite** for fast development and modern tooling
 
-## 2. Tech Stack & Libraries
-
-When generating or editing code, assume:
-
-- Build: `Vite` (`vite.config.ts`)
-- Language: `TypeScript` everywhere (`.ts` / `.tsx`, no `.js`).
-- UI: React + CSS (or Tailwind if it already exists; don’t introduce new UI libs unless asked).
-- Routing: `react-router-dom` if routing is present.
-- Data fetching: `fetch` or `axios` (match existing choice).
-- State:
-  - Prefer **React state + context** for simple cases.
-  - If a state library exists (e.g. Zustand, Redux, React Query), **reuse it**; don’t add another.
-- Testing:
-  - Unit tests: `Vitest`.
-  - React tests: `@testing-library/react`.
-
-If you’re unsure between multiple options, **follow existing patterns in this repo**.
+The app generates 3-6 distinct characters with unique voices, personalities, and perspectives, then plays their conversation as an animated theatrical experience.
 
 ---
 
-## 3. File & Folder Structure
+## Tech Stack
 
-When adding new code, follow this structure:
+### Core
+- **Build Tool**: Vite
+- **Language**: TypeScript (strict mode)
+- **UI Framework**: React 18 (functional components only)
+- **Styling**: CSS Modules / Plain CSS
+- **Animation**: GSAP (for ChromaGrid)
+- **HTTP Client**: Axios
 
-- `src/main.tsx` – App entry
-- `src/App.tsx` – High-level layout / routing
-- `src/components/` – Reusable, presentational components
-  - `MyComponent/`
-    - `MyComponent.tsx`
-    - `MyComponent.test.tsx`
-    - `MyComponent.types.ts` (optional, for shared types)
-- `src/features/` – Feature-based folders for larger domains
-  - `feature-name/`
-    - `components/`
-    - `hooks/`
-    - `types.ts`
-    - `api.ts`
-- `src/hooks/` – Generic reusable hooks
-- `src/lib/` – Utilities, helpers, configuration
-- `src/styles/` – Global styles (CSS/Tailwind config)
-- `src/routes/` or `src/pages/` – Route-level components (if applicable)
+### AI Services
+- **Text Generation**: Groq API (`llama-3.3-70b-versatile`)
+- **Voice Synthesis**: OpenAI TTS API (`gpt-4o-mini-tts`)
 
-Rules:
-
-- Use **PascalCase** for React components & files: `UserCard.tsx`.
-- Use **camelCase** for variables, functions, hooks: `useUserData`.
-- Use **kebab-case** for folders: `user-profile`, `auth-form`.
-- One component per file unless it’s a very small helper-only component.
+### Key Libraries
+- `ogl` - WebGL graphics (for backgrounds)
+- `gsap` - Smooth animations
 
 ---
 
-## 4. TypeScript & Coding Style
+## Architecture
 
-General:
+### File Structure
 
-- **No `any`**. If you must, wrap it with a TODO comment explaining why and how to fix later.
-- Prefer explicit types for public APIs, hooks, and component props.
-- Use **type aliases** or **interfaces** for reusable shapes in `/types.ts` files.
-- Use **discriminated unions** instead of enums where possible.
+```
+src/
+├── components/
+│   ├── ChromaGrid.tsx           # Interactive character grid with spotlight effect
+│   ├── ChromaGrid.css
+│   ├── LandingPage/
+│   │   ├── LandingPage.tsx      # Hero + input section
+│   │   └── LandingPage.css
+│   └── [PascalCase components]
+├── hooks/
+│   ├── usePerspectives.ts       # Groq AI story generation
+│   └── usePersonaVoices.ts      # OpenAI TTS voice management
+├── lib/
+│   ├── avatarConstants.ts       # Gender-specific avatar pools
+│   └── [utility files]
+├── assets/
+│   └── theatre.webp             # Landing page background
+├── keys.ignore.ts               # API keys (never commit!)
+├── App.tsx                      # Main app orchestration
+└── main.tsx                     # Entry point
+```
 
-Components:
+### Component Hierarchy
 
-- Always type props explicitly:
-
-  ```ts
-  type UserCardProps = {
-    user: User;
-    onSelect?: (id: string) => void;
-  };
-
-  export function UserCard({ user, onSelect }: UserCardProps) { ... }
-  ```
-
-- Default exports: only if there is clearly one main component per file; otherwise prefer named exports.
-- Keep components small and focused. If a component becomes large (e.g. > ~150 lines), consider extracting subcomponents or hooks.
-
-Hooks:
-
-- Custom hooks must be named `useXxx` and live in `hooks/` when reused across features.
-- Hooks should encapsulate:
-  - Data fetching
-  - Derived state / business logic
-  - Side effects (subscriptions, timers, etc.)
-- Components should be mostly about **layout and rendering**, not complex logic.
-
----
-
-## 5. React Patterns & Behavior
-
-- Prefer **controlled** components for forms unless a clear reason to use uncontrolled.
-- Avoid prop drilling; use context or a state library if 3+ levels deep.
-- Avoid unnecessary re-renders:
-  - Use `useMemo` and `useCallback` only when there is a real performance or dependency issue, not by default.
-- When adding async logic:
-  - Handle loading, success, and error states explicitly.
-  - Show user-friendly messages, not raw error objects.
-
-Examples:
-
-- **Data fetching pattern** (no global state library):
-
-  ```ts
-  const [data, setData] = useState<DataType | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-
-    fetch("/api/resource")
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch resource");
-        const json = (await res.json()) as DataType;
-        if (isMounted) setData(json);
-      })
-      .catch((err: unknown) => {
-        if (isMounted)
-          setError(err instanceof Error ? err.message : "Unknown error");
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-  ```
-
----
-
-## 6. Styling & CSS
-
-- Do **not** introduce a new styling solution; use what’s already in the project:
-  - If Tailwind is configured, use Tailwind utility classes.
-  - If CSS modules are used, create `ComponentName.module.css`.
-  - If global CSS, keep selectors BEM-like and scoped.
-
-Rules:
-
-- Keep styling close to components, **except** global layout, variables, and resets.
-- Prefer semantic HTML: use `<button>`, `<nav>`, `<header>`, `<main>`, `<section>`, etc.
-- Ensure reasonable accessibility:
-  - Use aria attributes when necessary.
-  - Make interactive elements keyboard accessible.
-
----
-
-## 7. Testing
-
-When adding new features, **add or update tests**:
-
-- Use `Vitest` (`.test.ts` / `.test.tsx`) for unit tests.
-- Use `@testing-library/react` for React components.
-
-Guidelines:
-
-- Test **behavior**, not implementation details.
-- For components:
-  - Render component with typical props.
-  - Assert visible text, roles, and user interactions.
-- For pure functions:
-  - Test edge cases and typical cases.
-
-Example test pattern:
-
-```ts
-import { render, screen, fireEvent } from "@testing-library/react";
-import { UserCard } from "./UserCard";
-
-it("renders user name and triggers callback on click", () => {
-  const handleSelect = vi.fn();
-  render(<UserCard user={{ id: "1", name: "Abdo" }} onSelect={handleSelect} />);
-
-  fireEvent.click(screen.getByText("Abdo"));
-  expect(handleSelect).toHaveBeenCalledWith("1");
-});
+```
+App
+├── LandingPage (when !hasSubmitted)
+│   └── Theatre spotlight effect
+└── ChromaGrid + Dialogue Player (when hasSubmitted)
+    └── Animated character cards with voices
 ```
 
 ---
 
-## 8. AI Behavior in This Repo
+## Key Concepts
 
-When editing existing code:
+### 1. Story Generation Flow
 
-- **Preserve existing style and patterns**:
-  - Match current imports, formatting, and folder structure.
-  - Do not convert between `function` declarations and arrow functions unless asked.
-- Minimize changes:
-  - Do not refactor an entire file when a small change is requested.
-  - Keep diffs focused and relevant.
-- When a change is non-trivial:
-  - Briefly comment or explain the reasoning in code comments if helpful to future maintainers.
+1. User enters a situation (e.g., "My partner wants kids but I'm not sure")
+2. `usePerspectives` sends to Groq AI with detailed prompt
+3. AI returns 3-6 characters with:
+   - Name, gender, role (from 20 standardized roles)
+   - Border colors and gradients
+   - 14-18 dialogue lines
+4. Characters get:
+   - Gender-appropriate avatars (from `pravatarImgIdsForMales/Females`)
+   - Gender-appropriate OpenAI voices (never repeated if possible)
+   - Role-based TTS instructions
 
-When creating new code:
+### 2. Voice System
 
-- Prefer **clear and simple** solutions over clever ones.
-- Add **minimal inline comments** only where logic is non-obvious.
-- If there are multiple ways to solve a problem, choose the one that:
-  - Matches existing patterns.
-  - Is easiest to read and maintain.
+**20 Standardized Roles** (defined in `usePersonaVoices.ts`):
+- empathetic, analytical, provocateur, emotional, calm, assertive, skeptical, optimistic, cynical, nurturing, intense, playful, serious, wise, rebellious, mediator, challenger, supporter, observer, wildcard
 
----
+Each role maps to:
+- **Instructions** for OpenAI TTS (e.g., "raw, expressive, passionate")
+- **Voice pool** by gender (males: onyx, ash, echo; females: alloy, nova, shimmer, sage, coral)
 
-## 9. Documentation & Naming
+**Voice Selection Logic**:
+- Tracks `usedVoices` Set per story generation
+- Picks from unused voices first (to avoid repetition)
+- Falls back to random if all voices exhausted
+- Male characters: 3 voices (can repeat after 3 males)
+- Female characters: 5 voices (can repeat after 5 females)
 
-- Names must be:
-  - Descriptive, not abbreviated: `fetchUserProfile`, not `fUP`.
-  - Consistent: if you use `userId` in one place, don’t use `id` elsewhere for the same concept.
-- For non-trivial utilities and hooks, add a short doc comment above the function:
-  ```ts
-  /**
-   * useDebouncedValue returns a value that only updates
-   * after the given delay has passed without changes.
-   */
-  ```
-- Keep README and other docs up-to-date when adding significant features.
+### 3. Text-to-Speech Pipeline
 
----
-
-## 10. Performance & Optimization
-
-- Avoid premature optimization:
-  - First, write clear code.
-  - Only optimize for actual bottlenecks.
-- When handling large lists:
-  - Consider virtualization (e.g. `react-virtual`), but only if the project already uses it or truly needs it.
-- Be careful with dependencies in hooks:
-  - Include all required dependencies.
-  - If a function changes too often, consider extracting stable logic or using `useCallback`.
+1. User clicks "Play the conversation"
+2. Browser requests user interaction (autoplay policy bypass)
+3. `usePersonaVoices` generates all voices in parallel:
+   - Cleans text (removes markdown, emojis, stage directions)
+   - Calls OpenAI TTS with role-based instructions
+   - Converts response to base64 `data:audio/mp3` URI
+4. Plays dialogue sequentially with 100ms delay on first audio (prevents cutoff)
+5. Highlights speaking character in ChromaGrid
 
 ---
 
-## 11. Error Handling & Edge Cases
+## Coding Standards
 
-- Always handle:
-  - Empty states (no data).
-  - Loading states.
-  - Error states (network errors, invalid input).
-- Never expose raw stack traces or internal error messages to end users.
-- For user input:
-  - Validate on the client side.
-  - Show clear, human-friendly error messages.
+### TypeScript
+
+- **No `any`** - use `unknown` or proper types
+- **Explicit prop types** for all components
+- **Named exports** preferred (except main component per file)
+- **Type imports** when appropriate (`import type { ... }`)
+
+Example:
+```typescript
+type CharacterCardProps = {
+  name: string;
+  role: CharacterRole;
+  onSelect?: (id: string) => void;
+};
+
+export function CharacterCard({ name, role, onSelect }: CharacterCardProps) {
+  // ...
+}
+```
+
+### React Patterns
+
+- **Functional components only** (no classes)
+- **Hooks**: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`
+- **Custom hooks** for complex logic (data fetching, voice management)
+- **Controlled components** for forms
+- **Context** for deep prop drilling (not global state)
+
+### State Management
+
+- **React hooks** for local state
+- **useMemo** for expensive computations
+- **useCallback** for stable function references
+- **useRef** for mutable values that don't trigger re-renders
+
+### Async Patterns
+
+Always handle:
+- ✅ Loading states (`isLoading`)
+- ✅ Error states (`error`)
+- ✅ Success states (`data`)
+- ✅ Cleanup (abort controllers, unmount flags)
+
+Example:
+```typescript
+const [state, setState] = useState({ data: null, isLoading: false, error: null });
+
+useEffect(() => {
+  let isMounted = true;
+  
+  async function fetch() {
+    setState(prev => ({ ...prev, isLoading: true }));
+    try {
+      const result = await apiCall();
+      if (isMounted) setState({ data: result, isLoading: false, error: null });
+    } catch (error) {
+      if (isMounted) setState({ data: null, isLoading: false, error: error.message });
+    }
+  }
+  
+  fetch();
+  return () => { isMounted = false; };
+}, []);
+```
+
+### Styling
+
+- **CSS files** co-located with components
+- **BEM-like naming** or component-scoped classes
+- **CSS custom properties** for theming (e.g., `--angle` for animations)
+- **Responsive**: use `clamp()`, `vw`, media queries
+- **Dark theme**: base is `#000`, use rgba for overlays
+
+### Performance
+
+- **Lazy load** heavy components if needed
+- **Memoize** expensive computations
+- **Debounce** user input where appropriate
+- **Virtual scrolling** for large lists (if needed)
+- **Parallel API calls** when independent (e.g., voice generation)
 
 ---
 
-## 12. Migration & Refactors
+## API Keys & Security
 
-When asked to refactor:
+### Keys Location: `src/keys.ignore.ts`
 
-- **Step-by-step, not all-at-once**:
-  - Keep changes incremental and safe.
-  - Preserve behavior; don’t introduce new features during refactors.
-- If a refactor is large, propose:
-  - A small plan (phases / steps).
-  - The minimum set of files affected in each step.
+```typescript
+export const groqApiKey = "gsk_...";
+export const openAiTTSApiKey = "sk-proj-...";
+```
+
+**Rules**:
+- ✅ Never commit `keys.ignore.ts` (in `.gitignore`)
+- ✅ Never log keys to console
+- ✅ Client-side keys only (no server secrets)
+- ✅ Use environment variables in production
+
+---
+
+## AI Prompts
+
+### Groq Story Generation (`usePerspectives.ts`)
+
+**Prompt Structure**:
+1. **Mission**: Create gripping, emotionally charged conversation
+2. **Character Depth**: Distinct styles, motivations, flaws
+3. **Standardized Roles**: MUST use one of 20 roles (affects voice)
+4. **Conversation Dynamics**: 20 narrative techniques (e.g., "bold opening", "heated exchange")
+5. **Act Structure**: 
+   - Act 1 (4-5 lines): Hook + establish characters
+   - Act 2 (6-8 lines): Escalate conflict + reveal layers
+   - Act 3 (4-5 lines): Climax + transformation
+6. **Dialogue Craft**: Contractions, fragments, stage directions, natural cadence
+7. **Forbidden**: Therapist-speak, tidy resolutions, exposition
+
+**Output**: JSON with `characters[]` and `dialogue[]`
+
+### OpenAI TTS Instructions (`usePersonaVoices.ts`)
+
+Each role has concise instructions (e.g., "warm, understanding, slower speech" for empathetic). These are dynamically passed to `gpt-4o-mini-tts` to shape voice characteristics.
+
+---
+
+## Common Patterns
+
+### Adding a New Character Role
+
+1. Add to `availableRoles` in `usePersonaVoices.ts`
+2. Add description to `roleDescriptions` object
+3. `roleVoiceConfigs` auto-generates from descriptions
+4. No need to update Groq prompt (it's dynamic)
+
+### Adding a New Voice
+
+1. Verify voice is supported by OpenAI TTS
+2. Add to `maleVoices` or `femaleVoices` in `usePerspectives.ts`
+3. Test with `test-openai-voices.html` (standalone test page)
+
+### Debugging Voice Issues
+
+- Check console for `[Voice N] CharacterName (gender, role): voice=X, model=Y`
+- Verify base64 audio URI is generated (`data:audio/mp3;base64,...`)
+- Check browser autoplay policy (requires user interaction first)
+- Inspect OpenAI API response status (401 = permissions, 429 = rate limit)
+
+### Text Cleaning for TTS
+
+Located in `usePersonaVoices.ts` (`cleanTextForTTS` function):
+- Removes markdown (`**bold**`, `_italic_`)
+- Removes emojis (🎭, ❤️, etc.)
+- Removes stage directions (`[pauses]`, `[laughs]`)
+- Preserves punctuation for natural pauses
+
+---
+
+## Testing
+
+### Browser Testing
+- Always test with user interaction (click to play)
+- Test on Chrome, Firefox, Safari (autoplay policies differ)
+- Test with network throttling (for loading states)
+
+### Manual Test Scenarios
+1. Generate story with 3 characters (all unique voices)
+2. Generate story with 6 characters (some voice repetition expected)
+3. Generate story with all male/all female characters
+4. Test first audio cutoff fix (100ms delay)
+5. Test character highlighting during speech
+
+---
+
+## Known Limitations
+
+1. **Voice Repetition**: After 3 males or 5 females, voices will repeat
+2. **Browser Autoplay**: First interaction required to unlock audio
+3. **Rate Limits**: OpenAI TTS has rate limits (429 errors possible)
+4. **Mobile**: Spotlight animation may be heavy on low-end devices
+
+---
+
+## Future Improvements (Potential)
+
+- [ ] User authentication & saved stories
+- [ ] Custom voice selection per character
+- [ ] Export conversation as audio file
+- [ ] More visual themes (not just theatre)
+- [ ] Multi-language support
+- [ ] Character emotion visualization (beyond highlighting)
+
+---
+
+## Development Workflow
+
+### Starting Dev Server
+```bash
+npm install
+npm run dev
+```
+
+### Building for Production
+```bash
+npm run build
+npm run preview  # Test production build
+```
+
+### Code Quality
+- Run linter before committing
+- Fix all TypeScript errors (no `@ts-ignore`)
+- Test in browser (not just CLI)
+
+---
+
+## Troubleshooting
+
+### "Cannot read properties of undefined (reading 'has')"
+- `usedVoices` Set not passed to `getRandomVoice`
+- Check `fetchStory` in `usePerspectives.ts`
+
+### "401 Unauthorized" from OpenAI
+- API key missing or invalid permissions
+- Ensure key has "model.request" scope
+
+### "Audio cutoff at start"
+- First audio needs 100ms delay (`isFirstAudio` flag)
+- Check `playDialogue` in `usePersonaVoices.ts`
+
+### "Characters don't highlight when speaking"
+- `currentDialogueIndex` not updating
+- Check `setCurrentDialogueIndex` in `playDialogue`
+
+---
+
+## Important Files
+
+| File | Purpose | Don't Touch |
+|------|---------|-------------|
+| `keys.ignore.ts` | API keys | Never commit |
+| `usePerspectives.ts` | Core AI logic | Prompt is carefully tuned |
+| `usePersonaVoices.ts` | Voice engine | Role system is standardized |
+| `avatarConstants.ts` | Avatar pools | Gender-specific IDs |
+| `ChromaGrid.tsx` | Visual engine | GSAP animations are delicate |
+
+---
+
+## Quick Reference
+
+### Character Roles (20)
+empathetic, analytical, provocateur, emotional, calm, assertive, skeptical, optimistic, cynical, nurturing, intense, playful, serious, wise, rebellious, mediator, challenger, supporter, observer, wildcard
+
+### Male Voices (3)
+onyx, ash, echo
+
+### Female Voices (5)
+alloy, nova, shimmer, sage, coral
+
+### Key Hooks
+- `usePerspectives()` - Story generation
+- `usePersonaVoices(story, unlocked)` - Voice management
+
+### Key Components
+- `LandingPage` - Hero + input
+- `ChromaGrid` - Character grid
+- `App` - Orchestration
+
+---
+
+**Last Updated**: November 2024
+**Maintainer**: AI Show Team
+**License**: [Your License]
