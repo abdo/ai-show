@@ -53,10 +53,19 @@ const getRandomAvatarId = (
   return available[Math.floor(Math.random() * available.length)];
 };
 
-// Helper to get random voice for gender
-const getRandomVoice = (gender: "male" | "female"): string => {
+// Helper to get random voice for gender, avoiding repetition when possible
+const getRandomVoice = (
+  gender: "male" | "female",
+  usedVoices: Set<string>
+): string => {
   const pool = gender === "male" ? maleVoices : femaleVoices;
-  return pool[Math.floor(Math.random() * pool.length)];
+  const available = pool.filter((voice) => !usedVoices.has(voice));
+
+  // If we still have unused voices, pick from them
+  // Otherwise, pick from the entire pool
+  const selectionPool = available.length > 0 ? available : pool;
+
+  return selectionPool[Math.floor(Math.random() * selectionPool.length)];
 };
 
 const demoStory: StoryData = {
@@ -79,7 +88,7 @@ const demoStory: StoryData = {
       image: "https://i.pravatar.cc/300?img=12", // Male from pravatarImgIdsForMales
       borderColor: "#EF4444",
       gradient: "linear-gradient(210deg, #EF4444, #000)",
-      voiceId: "echo", // Male voice
+      voiceId: "onyx", // Male voice
     },
     {
       id: "sara",
@@ -331,14 +340,18 @@ export function usePerspectives() {
         throw new Error("Invalid story structure");
       }
 
-      // Track used avatar IDs to ensure uniqueness
+      // Track used avatar IDs and voices to ensure uniqueness
       const usedAvatarIds = new Set<number>();
+      const usedVoices = new Set<string>();
 
       // Ensure all characters have required fields
       const characters = parsed.characters.slice(0, 6).map((char, index) => {
         const gender = char.gender || (index % 2 === 0 ? "male" : "female");
         const avatarId = getRandomAvatarId(gender, usedAvatarIds);
         usedAvatarIds.add(avatarId);
+
+        const voiceId = getRandomVoice(gender, usedVoices);
+        usedVoices.add(voiceId);
 
         return {
           id: char.id || `character-${index}`,
@@ -348,7 +361,7 @@ export function usePerspectives() {
           image: `https://i.pravatar.cc/300?img=${avatarId}`,
           borderColor: char.borderColor || "#4F46E5",
           gradient: char.gradient || "linear-gradient(145deg, #4F46E5, #000)",
-          voiceId: getRandomVoice(gender),
+          voiceId: voiceId,
         };
       });
 

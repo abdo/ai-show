@@ -1,6 +1,7 @@
 .landing-page {
   min-height: 100vh;
   background: #000;
+  --angle: 90deg;
 }
 
 /* Hero Section */
@@ -15,12 +16,95 @@
   overflow: hidden;
 }
 
-.prism-background {
+.theatre-background {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theatre-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+}
+
+.ray {
+  clip-path: polygon(0% 40%, 100% 0%, 100% 100%, 0% 60%);
+  transition: 4s;
+  transform: translateY(-50%) translateX(-50%) rotate(var(--angle))
+    translateY(50%) translateX(50%) translateY(-50%);
+  position: absolute;
+  top: -50px;
+  width: 800px;
+  height: 150px;
+  background: linear-gradient(
+    0.25turn,
+    rgba(255, 255, 0, 0.8),
+    rgba(255, 255, 100, 0)
+  );
+}
+
+.light1,
+.light2 {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.light1 {
+  left: -15%;
+  animation-duration: 10s;
+  animation-name: wave1;
+  animation-iteration-count: infinite;
+}
+
+.light1 .ray {
+  left: 35%;
+}
+
+.light2 {
+  right: -15%;
+  animation-duration: 7s;
+  animation-name: wave2;
+  animation-iteration-count: infinite;
+}
+
+.light2 .ray {
+  left: 65%;
+}
+
+@keyframes wave1 {
+  0% {
+    --angle: 80deg;
+  }
+
+  50% {
+    --angle: 105deg;
+  }
+  100% {
+    --angle: 55deg;
+  }
+}
+
+@keyframes wave2 {
+  0% {
+    --angle: 100deg;
+  }
+
+  50% {
+    --angle: 125deg;
+  }
+  100% {
+    --angle: 75deg;
+  }
 }
 
 .hero-content {
@@ -101,6 +185,7 @@
 .cta-arrow {
   font-size: 1.5rem;
   animation: bounce 2s infinite;
+  margin-block-end: 5px;
 }
 
 @keyframes bounce {
@@ -263,4 +348,3 @@
     grid-template-columns: 1fr;
   }
 }
-

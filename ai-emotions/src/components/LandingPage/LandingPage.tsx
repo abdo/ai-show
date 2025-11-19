@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Prism from "../Prism/Prism";
 import "./LandingPage.css";
+import theatreImage from "../../assets/theatre.webp";
 
 type LandingPageProps = {
   onStartStory: (userInput: string) => void;
@@ -25,20 +25,16 @@ export function LandingPage({ onStartStory }: LandingPageProps) {
 
   return (
     <div className="landing-page">
-      {/* Hero Section with Prism Background */}
+      {/* Hero Section with Theatre Spotlight */}
       <div className="hero-section">
-        <div className="prism-background">
-          <Prism
-            animationType="rotate"
-            timeScale={0.5}
-            height={3.5}
-            baseWidth={5.5}
-            scale={3.6}
-            hueShift={0}
-            colorFrequency={1}
-            noise={0.5}
-            glow={1}
-          />
+        <div className="theatre-background">
+          <img className="theatre-img" src={theatreImage} alt="Theatre stage" />
+          <div className="light1">
+            <div className="ray"></div>
+          </div>
+          <div className="light2">
+            <div className="ray"></div>
+          </div>
         </div>
         <div className="hero-content">
           <h1 className="hero-title">
@@ -59,7 +55,7 @@ export function LandingPage({ onStartStory }: LandingPageProps) {
             }}
           >
             Create Your Show
-            <span className="cta-arrow">↓</span>
+            <span className="cta-arrow">👇</span>
           </button>
         </div>
       </div>
@@ -91,7 +87,7 @@ export function LandingPage({ onStartStory }: LandingPageProps) {
               onClick={() => handleSubmit(input)}
               disabled={!input.trim()}
             >
-              Start the Show →
+              Start the Show 👉
             </button>
           </div>
 
