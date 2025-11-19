@@ -2,6 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import { openAiTTSApiKey } from "../keys.ignore";
 import type { Character, DialogueLine } from "./usePerspectives";
 import { cleanTextForSpeech } from "../lib/textCleaner";
+import {
+  type CharacterRole,
+  availableRoles,
+  roleDescriptions,
+} from "../constants/theatreCharacters";
 
 type VoiceStatus = "idle" | "generating" | "ready" | "error";
 
@@ -15,93 +20,16 @@ type DialogueAudio = {
 
 type AudioMap = Record<number, DialogueAudio>;
 
-// Standardized character roles with specific voice configurations
-// Note: Voice is determined by character gender, not role
 type VoiceConfig = {
   instructions: string;
-};
-
-export type CharacterRole =
-  | "empathetic"
-  | "analytical"
-  | "provocateur"
-  | "emotional"
-  | "calm"
-  | "assertive"
-  | "skeptical"
-  | "optimistic"
-  | "cynical"
-  | "nurturing"
-  | "intense"
-  | "playful"
-  | "serious"
-  | "wise"
-  | "rebellious"
-  | "mediator"
-  | "challenger"
-  | "supporter"
-  | "observer"
-  | "wildcard";
-
-// Export all available roles as an array for use in prompts
-export const availableRoles: CharacterRole[] = [
-  "empathetic",
-  "analytical",
-  "provocateur",
-  "emotional",
-  "calm",
-  "assertive",
-  "skeptical",
-  "optimistic",
-  "cynical",
-  "nurturing",
-  "intense",
-  "playful",
-  "serious",
-  "wise",
-  "rebellious",
-  "mediator",
-  "challenger",
-  "supporter",
-  "observer",
-  "wildcard",
-];
-
-// Role descriptions for Groq prompt (human-readable explanations)
-export const roleDescriptions: Record<CharacterRole, string> = {
-  empathetic:
-    "warm, understanding, compassionate with slower thoughtful speech",
-  analytical: "logical, measured, precise with clear methodical thinking",
-  provocateur: "bold, challenging, stirring with sharp faster speech",
-  emotional: "raw, expressive, passionate with intense heartfelt delivery",
-  calm: "peaceful, soothing, tranquil with slow steady pace",
-  assertive: "confident, direct, commanding with slightly fast delivery",
-  skeptical: "questioning, doubtful, critical with cautious measured tone",
-  optimistic: "hopeful, upbeat, positive with bright enthusiastic energy",
-  cynical: "pessimistic, sarcastic with dark dry humor delivery",
-  nurturing: "caring, gentle, supportive with slow warm pace",
-  intense: "powerful, fierce, focused with fast urgent speech",
-  playful: "lighthearted, fun, teasing with quick lively banter",
-  serious: "grave, deliberate, solemn with slow weighted pace",
-  wise: "thoughtful, measured, insightful with calm sage-like delivery",
-  rebellious: "defiant, quick, challenging with bold provocative energy",
-  mediator: "balanced, neutral, diplomatic with calm peacemaker tone",
-  challenger: "confrontational, direct, pushing with sharp assertive speech",
-  supporter: "encouraging, motivating, uplifting with warm cheerleader energy",
-  observer: "detached, watching, analytical with slow distant pace",
-  wildcard: "unpredictable, spontaneous, erratic with constantly varying pace",
 };
 
 // Voice instructions for each standardized role (for gpt-4o-mini-tts)
 // Voice selection is gender-based (set in usePerspectives), instructions are role-based
 // Instructions are dynamically derived from roleDescriptions to avoid duplication
-export const roleVoiceConfigs: Record<CharacterRole, VoiceConfig> =
-  Object.fromEntries(
-    availableRoles.map((role) => [
-      role,
-      { instructions: roleDescriptions[role] },
-    ])
-  ) as Record<CharacterRole, VoiceConfig>;
+const roleVoiceConfigs: Record<CharacterRole, VoiceConfig> = Object.fromEntries(
+  availableRoles.map((role) => [role, { instructions: roleDescriptions[role] }])
+) as Record<CharacterRole, VoiceConfig>;
 
 // Extract standardized role from character's role text
 const extractRole = (roleText: string): CharacterRole => {
@@ -445,8 +373,8 @@ export function usePersonaVoices() {
           currentIndex,
           () => {
             currentIndex++;
-            // Small delay between lines
-            setTimeout(playNext, 500);
+            // Minimal delay between lines for natural flow
+            setTimeout(playNext, 100);
           },
           isFirst
         );

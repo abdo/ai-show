@@ -1,10 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import theatreImage from "../../assets/theatre.webp";
-
-type LandingPageProps = {
-  onStartStory: (userInput: string) => void;
-};
 
 const examplePrompts = [
   "Should I confront my friend who keeps canceling plans?",
@@ -14,12 +11,13 @@ const examplePrompts = [
   "I saw my best friend's partner cheating on them.",
 ];
 
-export function LandingPage({ onStartStory }: LandingPageProps) {
+export function LandingPage() {
   const [input, setInput] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (text: string) => {
     if (text.trim()) {
-      onStartStory(text.trim());
+      navigate("/theatre", { state: { topic: text.trim() } });
     }
   };
 
