@@ -333,6 +333,7 @@ export function usePersonaVoices() {
         const audioElement = new Audio(audio.audioSrc);
         audioElement.volume = volume / 100;
         currentAudioRef.current = audioElement;
+        console.log(`[Playback] Index: ${index}, CharacterId: ${audio.characterId}`);
         setCurrentDialogueIndex(index);
 
         audioElement.onended = () => {

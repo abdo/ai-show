@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { groqApiKey } from "../keys.ignore";
 import {
@@ -83,9 +83,18 @@ export function usePerspectives() {
     error: null,
   });
 
+  const isLoadingRef = useRef(false);
+
   const fetchStory = useCallback(async (userInput: string) => {
     if (!userInput.trim()) return;
 
+    // Prevent duplicate calls
+    if (isLoadingRef.current) {
+      console.log("Already loading, skipping duplicate fetch");
+      return;
+    }
+
+    isLoadingRef.current = true;
     setState((prev) => ({
       ...prev,
       isLoading: true,
@@ -103,6 +112,7 @@ export function usePerspectives() {
           // Add small artificial delay to simulate loading
           await new Promise((resolve) => setTimeout(resolve, 1000));
           setState({ story, isLoading: false, error: null });
+          isLoadingRef.current = false;
           return;
         }
       }
@@ -188,6 +198,7 @@ export function usePerspectives() {
       }
 
       setState({ story, isLoading: false, error: null });
+      isLoadingRef.current = false;
     } catch (error) {
       console.error("usePerspectives error", error);
       setState({
@@ -195,6 +206,7 @@ export function usePerspectives() {
         isLoading: false,
         error: "Couldn't generate a fresh story. Showing a demo instead.",
       });
+      isLoadingRef.current = false;
     }
   }, []);
 

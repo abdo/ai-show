@@ -32,5 +32,5 @@ export type CharacterRole = keyof typeof roleDescriptions;
 export const availableRoles = Object.keys(roleDescriptions) as CharacterRole[];
 
 // OpenAI TTS voices by gender
-export const maleVoices = ["onyx", "ash", "echo"];
+export const maleVoices = ["onyx", "ash"];
 export const femaleVoices = ["alloy", "nova", "shimmer", "sage", "coral"];

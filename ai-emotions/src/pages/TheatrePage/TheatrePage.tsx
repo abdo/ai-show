@@ -33,7 +33,7 @@ export function TheatrePage() {
 
   const [conversationStarted, setConversationStarted] = useState(false);
 
-  // Redirect to home if no topic provided
+  // Redirect to home if no topic provided, fetch story once on mount
   useEffect(() => {
     if (!topic) {
       navigate("/", { replace: true });
@@ -41,7 +41,8 @@ export function TheatrePage() {
     }
     unlockAudio();
     fetchStory(topic);
-  }, [topic, navigate, fetchStory, unlockAudio]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic, navigate]); // Only depend on topic and navigate, not the functions
 
   useEffect(() => {
     if (!story || !story.characters.length || !story.dialogue.length) return;
@@ -88,7 +89,9 @@ export function TheatrePage() {
   // Get the character currently speaking
   const speakingCharacterId = useMemo(() => {
     if (currentDialogueIndex === -1 || !story) return null;
-    return story.dialogue[currentDialogueIndex]?.characterId || null;
+    const characterId = story.dialogue[currentDialogueIndex]?.characterId || null;
+    console.log(`[Highlight] Index: ${currentDialogueIndex}, CharacterId: ${characterId}`);
+    return characterId;
   }, [currentDialogueIndex, story]);
 
   return (
@@ -97,17 +100,19 @@ export function TheatrePage() {
         ← Back
       </button>
 
-      <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
-
       {conversationStarted && (
-        <div className="theatre-lights">
-          <div className="light1">
-            <div className="ray"></div>
+        <>
+          <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
+          
+          <div className="theatre-lights">
+            <div className="light1">
+              <div className="ray"></div>
+            </div>
+            <div className="light2">
+              <div className="ray"></div>
+            </div>
           </div>
-          <div className="light2">
-            <div className="ray"></div>
-          </div>
-        </div>
+        </>
       )}
 
       <div className="theatre-header">
@@ -215,6 +220,32 @@ export function TheatrePage() {
               selectedPersonaId={speakingCharacterId}
             />
           </div>
+
+          {conversationStarted && (
+            <div className="dialogue-display">
+              {story?.dialogue.map((line, index) => {
+                const character = story.characters.find(
+                  (c) => c.id === line.characterId
+                );
+                const isActive = index === currentDialogueIndex;
+                const hasPlayed = index < currentDialogueIndex;
+
+                return (
+                  <div
+                    key={index}
+                    className={`dialogue-line ${isActive ? "active" : ""} ${
+                      hasPlayed ? "played" : ""
+                    }`}
+                  >
+                    <span className="character-name">
+                      {character?.name} ({line.characterId}):
+                    </span>{" "}
+                    <span className="dialogue-text">{line.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>
