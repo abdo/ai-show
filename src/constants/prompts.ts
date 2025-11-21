@@ -137,7 +137,10 @@ You are creating a dramatic re-enactment inspired by what [USER_NAME] described.
 /**
  * Base instructions shared by both modes (technical specs, dialogue craft, format)
  */
-const BASE_INSTRUCTIONS = `**BE CREATIVE:**
+/**
+ * Shared instructions for both modes (Character depth, roles, dialogue craft, technical specs)
+ */
+const SHARED_INSTRUCTIONS = `**BE CREATIVE:**
 Don't fall into predictable patterns. Surprise with unexpected turns, unique character dynamics, and fresh perspectives. Avoid one-dimensional conversations where everyone just states opinions. Make it cinematic and memorable.
 
 **YOUR MISSION:**
@@ -158,26 +161,6 @@ ${availableRoles
   .join("\n")}
 
 Choose roles that create interesting dynamics and contrast. Each character should embody their role in speech patterns and perspective.
-
-**STRUCTURAL REQUIREMENTS:**
-
-*Act 1 (Opening 4-5 lines):*
-- Hook immediately with tension, stakes, or intrigue
-- Establish each character's position and communication style
-- Create an "uh oh" or "oh damn" moment early
-
-*Act 2 (Middle 6-8 lines):*
-- Escalate conflict and emotional intensity
-- Include at least ONE moment that gives chills
-- Let characters interrupt, talk over each other, react viscerally
-- Reveal hidden layers: personal stories, stakes, motivations
-- Create unexpected alliances or betrayals
-
-*Act 3 (Final 4-5 lines):*
-- Reach an emotional climax or breakthrough
-- Don't wrap everything up neatly - life is messy
-- End with transformation, lingering question, or paradigm shift
-- Leave the audience thinking
 
 **DIALOGUE CRAFT:**
 
@@ -238,7 +221,7 @@ Output ONLY this JSON (no markdown, no explanations):
 {
   "characters": [
     {
-      "id": "lowercase-kebab-case",
+      "id": "lowercase-kebab-case, something that could be their twitter handle, realistic, maybe funny",
       "name": "First name only (realistic, culturally appropriate)",
       "gender": "male OR female (choose based on the character)",
       "role": "MUST be ONE of the 20 standardized roles listed above (e.g., 'emotional', 'analytical', 'provocateur')",
@@ -259,10 +242,67 @@ Output ONLY this JSON (no markdown, no explanations):
 Remember: This is theatre. Every word matters. Make it unforgettable.`;
 
 /**
- * Main story generation prompt - combines mode-specific framing with base instructions
+ * Structure for Conversation Mode (Debate/Discussion)
+ */
+const CONVERSATION_STRUCTURE = `**STRUCTURAL REQUIREMENTS (DISCUSSION):**
+
+*Act 1 (Opening 4-5 lines):*
+- Hook immediately with tension, stakes, or intrigue
+- Establish each character's position and communication style
+- Create an "uh oh" or "oh damn" moment early
+
+*Act 2 (Middle 6-8 lines):*
+- Escalate conflict and emotional intensity
+- Include at least ONE moment that gives chills
+- Let characters interrupt, talk over each other, react viscerally
+- Reveal hidden layers: personal stories, stakes, motivations
+- Create unexpected alliances or betrayals
+
+*Act 3 (Final 4-5 lines):*
+- Reach an emotional climax or breakthrough
+- Don't wrap everything up neatly - life is messy
+- End with transformation, lingering question, or paradigm shift
+- Leave the audience thinking`;
+
+/**
+ * Structure for Story Mode (Cinematic Scene)
+ */
+const STORY_STRUCTURE = `**STRUCTURAL REQUIREMENTS (CINEMATIC SCENE):**
+
+*Phase 1: The Hook (In Media Res)*
+- Drop us DIRECTLY into the moment. No warm-ups.
+- Establish the immediate physical and emotional context.
+- The first line should set the stakes instantly.
+
+*Phase 2: The Action (The Event)*
+- Show the core conflict or discovery unfolding in real-time.
+- Focus on sensory details and visceral reactions.
+- Allow for silence, hesitation, and non-verbal beats [looks away], [pauses].
+- Build the tension to a breaking point.
+
+*Phase 3: The Fallout (Reaction)*
+- Show the immediate emotional aftermath.
+- Don't resolve the problem - show how it lands on the characters.
+- End on a high emotional note or a cliffhanger.
+- Leave the viewer feeling the weight of the moment.`;
+
+/**
+ * Main story generation prompt - combines mode-specific framing with correct structure and shared instructions
  */
 export function storyGenerationPrompt(mode: 'conversation' | 'story' = 'conversation'): string {
   const modeFraming = mode === 'conversation' ? getConversationModeFraming() : STORY_MODE_FRAMING;
+  const structure = mode === 'conversation' ? CONVERSATION_STRUCTURE : STORY_STRUCTURE;
+  
+  // Only include conversation pattern for conversation mode
+  let patternSection = "";
+  if (mode === 'conversation') {
+    patternSection = `
+**CONVERSATION PATTERN:**
+${getRandomScenario()}
+
+Use this as a loose guide for the conversation's dynamic. Adapt it naturally to fit the user's situation - don't force it.
+`;
+  }
   
   return `You are a master screenwriter creating a gripping, emotionally charged conversation between 3-5 distinct characters.
 
@@ -270,6 +310,10 @@ export function storyGenerationPrompt(mode: 'conversation' | 'story' = 'conversa
 
 ${modeFraming}
 
-${BASE_INSTRUCTIONS}
+${patternSection}
+
+${structure}
+
+${SHARED_INSTRUCTIONS}
 `;
 }
