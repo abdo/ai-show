@@ -20,7 +20,7 @@ export function useShow() {
   const isLoadingRef = useRef(false);
 
   const fetchShow = useCallback(async (
-    userInput: string, 
+    userInput: string,
     userName?: string,
     mode: 'conversation' | 'story' = 'conversation'
   ) => {
@@ -41,9 +41,26 @@ export function useShow() {
     try {
       // Check for mock mode
       const isMock = localStorage.getItem("mock") === "true";
+
       if (isMock) {
-        // Mock implementation could go here if needed, but for now let's focus on the real API
-        // or fallback to demo story if API fails
+        // Try to use cached show data
+        const cachedShow = localStorage.getItem("mock_show");
+        if (cachedShow) {
+          try {
+            const parsedShow = JSON.parse(cachedShow);
+            setState({
+              story: parsedShow.story,
+              audioMap: parsedShow.audioMap,
+              isLoading: false,
+              error: null,
+            });
+            isLoadingRef.current = false;
+            console.log("[Mock Mode] Using cached show data from localStorage");
+            return;
+          } catch (parseError) {
+            console.warn("[Mock Mode] Failed to parse cached data, fetching fresh data", parseError);
+          }
+        }
       }
 
       const response = await api.getShow({
@@ -58,7 +75,17 @@ export function useShow() {
         isLoading: false,
         error: null,
       });
-      
+
+      // Cache the response if in mock mode
+      if (isMock) {
+        try {
+          localStorage.setItem("mock_show", JSON.stringify(response));
+          console.log("[Mock Mode] Cached show data to localStorage");
+        } catch (cacheError) {
+          console.warn("[Mock Mode] Failed to cache show data", cacheError);
+        }
+      }
+
       isLoadingRef.current = false;
     } catch (error) {
       console.error("useShow error", error);
