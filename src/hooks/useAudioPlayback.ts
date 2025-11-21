@@ -1,12 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { openAiTTSApiKey } from "../keys.ignore";
-import type { Character, DialogueLine } from "./usePerspectives";
-import { extractToneAndCleanText } from "../lib/textCleaner";
-import {
-  type CharacterRole,
-  availableRoles,
-  roleDescriptions,
-} from "../constants/theatreCharacters";
 
 type VoiceStatus = "idle" | "generating" | "ready" | "error";
 
@@ -20,37 +12,8 @@ type DialogueAudio = {
 
 type AudioMap = Record<number, DialogueAudio>;
 
-type VoiceConfig = {
-  instructions: string;
-};
-
-// Voice instructions for each standardized role (for gpt-4o-mini-tts)
-// Voice selection is gender-based (set in usePerspectives), instructions are role-based
-// Instructions are dynamically derived from roleDescriptions to avoid duplication
-const roleVoiceConfigs: Record<CharacterRole, VoiceConfig> = Object.fromEntries(
-  availableRoles.map((role) => [role, { instructions: roleDescriptions[role] }])
-) as Record<CharacterRole, VoiceConfig>;
-
-// Extract standardized role from character's role text
-// Since AI is instructed to use exact role names, this is just a safety fallback
-const extractRole = (roleText: string): CharacterRole => {
-  const normalized = roleText.toLowerCase().trim();
-  
-  // Check if it's an exact match with any role
-  if (availableRoles.includes(normalized as CharacterRole)) {
-    return normalized as CharacterRole;
-  }
-  
-  // Otherwise, find the first role that the text includes
-  const matchedRole = availableRoles.find(role => normalized.includes(role));
-  
-  // Fallback to mediator if no match
-  return matchedRole || "mediator";
-};
-
-export function usePersonaVoices() {
+export function useAudioPlayback() {
   const [audioMap, setAudioMap] = useState<AudioMap>({});
-  const [isGenerating, setIsGenerating] = useState(false);
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState<number>(-1);
   const [volume, setVolume] = useState<number>(100);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -58,6 +21,7 @@ export function usePersonaVoices() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const unlockedRef = useRef(false);
   const totalLinesRef = useRef<number>(0);
+  const volumeRef = useRef<number>(100);
 
   const unlockAudio = useCallback(() => {
     unlockedRef.current = true;
@@ -65,163 +29,35 @@ export function usePersonaVoices() {
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume);
-    // Update current audio if playing
+    volumeRef.current = newVolume;
     if (currentAudioRef.current) {
       currentAudioRef.current.volume = newVolume / 100;
     }
   }, []);
 
-  const generateAllVoices = useCallback(
-    async (dialogue: DialogueLine[], characters: Character[]) => {
-      if (!dialogue.length || !characters.length) return;
-
-      setIsGenerating(true);
-      setAudioMap({});
-
-      // Check for mock mode
-      const isMock = localStorage.getItem("mock") === "true";
-      if (isMock) {
-        const cachedVoices = localStorage.getItem("mock_voices");
-        if (cachedVoices) {
-          try {
-            const parsedVoices = JSON.parse(cachedVoices) as AudioMap;
-            // Add small artificial delay
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            setAudioMap(parsedVoices);
-            setIsGenerating(false);
-            return;
-          } catch (e) {
-            console.warn("Failed to parse cached voices", e);
-          }
-        }
+  const loadAudioMap = useCallback((backendAudioMap: Record<number, string>, dialogue: any[]) => {
+    const newAudioMap: AudioMap = {};
+    
+    dialogue.forEach((line, index) => {
+      const base64Audio = backendAudioMap[index];
+      if (base64Audio) {
+        newAudioMap[index] = {
+          dialogueIndex: index,
+          characterId: line.characterId,
+          status: "ready",
+          audioSrc: `data:audio/mp3;base64,${base64Audio}`
+        };
       }
+    });
 
-      // Build a character map for quick lookup
-      const charMap = new Map(characters.map((c) => [c.id, c]));
-
-      const results = await Promise.all(
-        dialogue.map(async (line, index) => {
-          const character = charMap.get(line.characterId);
-          if (!character) {
-            console.warn(`Character ${line.characterId} not found`);
-            return undefined;
-          }
-
-          try {
-            // Extract tone and clean the text before sending to TTS
-            const { cleanedText, tone } = extractToneAndCleanText(line.text);
-
-            // Get role-based configuration for base instructions
-            const characterRole = extractRole(character.role);
-            const roleConfig = roleVoiceConfigs[characterRole];
-
-            // Use extracted tone if available, otherwise fall back to role description
-            const instructions = tone || roleConfig.instructions;
-
-            // Use the character's assigned voiceId (gender-appropriate from usePerspectives)
-            const voiceId = character.voiceId;
-
-            if (!voiceId) {
-              console.error(
-                `[Voice ${index}] ${character.name} is missing voiceId!`
-              );
-              return undefined;
-            }
-
-            const response = await fetch(
-              "https://api.openai.com/v1/audio/speech",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${openAiTTSApiKey}`,
-                },
-                body: JSON.stringify({
-                  model: "gpt-4o-mini-tts",
-                  voice: voiceId,
-                  speed: 1.1,
-                  input: cleanedText,
-                  instructions: instructions,
-                }),
-              }
-            );
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error(
-                `[Voice ${index}] OpenAI API Error ${response.status}:`,
-                errorText
-              );
-              throw new Error(`OpenAI TTS ${response.status}: ${errorText}`);
-            }
-
-            const arrayBuffer = await response.arrayBuffer();
-            const audioSrc = arrayBufferToDataUri(arrayBuffer);
-
-            const audioItem: DialogueAudio = {
-              dialogueIndex: index,
-              characterId: line.characterId,
-              status: "ready",
-              audioSrc,
-            };
-
-            setAudioMap((prev) => ({
-              ...prev,
-              [index]: audioItem,
-            }));
-
-            return audioItem;
-          } catch (error) {
-            console.error(`Voice generation error for line ${index}`, error);
-            setAudioMap((prev) => ({
-              ...prev,
-              [index]: {
-                dialogueIndex: index,
-                characterId: line.characterId,
-                status: "error",
-                error:
-                  error instanceof Error
-                    ? error.message
-                    : "Failed to generate voice",
-              },
-            }));
-            return undefined;
-          }
-        })
-      );
-
-      // Cache the voices if we have a full set (or at least some)
-      const newAudioMap: AudioMap = {};
-      let hasData = false;
-      results.forEach((result) => {
-        if (result) {
-          newAudioMap[result.dialogueIndex] = result;
-          hasData = true;
-        }
-      });
-
-      if (hasData) {
-        try {
-          localStorage.setItem("mock_voices", JSON.stringify(newAudioMap));
-        } catch (e) {
-          console.warn(
-            "Failed to cache voices to localStorage (quota likely exceeded)",
-            e
-          );
-        }
-      }
-
-      setIsGenerating(false);
-    },
-    []
-  );
+    setAudioMap(newAudioMap);
+  }, []);
 
   const playDialogue = useCallback(
     (index: number, onFinished?: () => void, isFirstAudio: boolean = false) => {
       if (!unlockedRef.current) return;
       const audio = audioMap[index];
       if (!audio || audio.status !== "ready" || !audio.audioSrc) {
-        // If audio not ready, skip to next
         onFinished?.();
         return;
       }
@@ -229,7 +65,7 @@ export function usePersonaVoices() {
       try {
         currentAudioRef.current?.pause();
         const audioElement = new Audio(audio.audioSrc);
-        audioElement.volume = volume / 100;
+        audioElement.volume = volumeRef.current / 100;
         currentAudioRef.current = audioElement;
         setCurrentDialogueIndex(index);
 
@@ -238,7 +74,6 @@ export function usePersonaVoices() {
           onFinished?.();
         };
 
-        // Add a small delay for the first audio to prevent cutting off the beginning
         const playDelay = isFirstAudio ? 600 : 0;
 
         setTimeout(() => {
@@ -254,7 +89,7 @@ export function usePersonaVoices() {
         onFinished?.();
       }
     },
-    [audioMap, volume]
+    [audioMap]
   );
 
   const playAllDialogue = useCallback(
@@ -276,7 +111,6 @@ export function usePersonaVoices() {
           currentIndex,
           () => {
             currentIndex++;
-            // Minimal delay between lines for natural flow
             setTimeout(playNext, 100);
           },
           isFirst
@@ -313,7 +147,6 @@ export function usePersonaVoices() {
 
   const togglePause = useCallback(() => {
     if (hasEnded) {
-      // If conversation ended, replay from beginning
       playAllDialogue(totalLinesRef.current);
     } else if (isPaused) {
       resumeAudio();
@@ -323,8 +156,10 @@ export function usePersonaVoices() {
   }, [hasEnded, isPaused, pauseAudio, resumeAudio, playAllDialogue]);
 
   const downloadConversation = useCallback(async () => {
+    // ... (keep existing download logic, just ensure it uses audioMap correctly)
+    // For brevity, I'll assume the existing logic works with the new AudioMap structure
+    // or I can copy it over if needed. Let's copy the core logic to be safe.
     try {
-      // Get all audio sources in order
       const audioSources: string[] = [];
       Object.keys(audioMap)
         .sort((a, b) => Number(a) - Number(b))
@@ -340,17 +175,14 @@ export function usePersonaVoices() {
         return;
       }
 
-      // Create audio context
       const AudioContextClass =
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext })
           .webkitAudioContext;
       const audioContext = new AudioContextClass();
 
-      // Decode all audio data
       const audioBuffers = await Promise.all(
         audioSources.map(async (src) => {
-          // Convert data URI to array buffer
           const base64 = src.split(",")[1];
           const binaryString = window.atob(base64);
           const bytes = new Uint8Array(binaryString.length);
@@ -361,37 +193,31 @@ export function usePersonaVoices() {
         })
       );
 
-      // Calculate total length (including 0.5s gaps between clips)
-      const gapDuration = 0.5; // 500ms gap between dialogue lines
+      const gapDuration = 0.5;
       const totalLength = audioBuffers.reduce(
         (sum, buffer) => sum + buffer.duration + gapDuration,
         0
       );
 
-      // Determine if we need mono or stereo output
       const isAnyBufferStereo = audioBuffers.some(
         (b) => b.numberOfChannels > 1
       );
       const outputChannels = isAnyBufferStereo ? 2 : 1;
 
-      // Create a new buffer for the combined audio
       const combinedBuffer = audioContext.createBuffer(
         outputChannels,
         Math.ceil(totalLength * audioContext.sampleRate),
         audioContext.sampleRate
       );
 
-      // Copy all audio buffers into the combined buffer
       let offset = 0;
       audioBuffers.forEach((buffer) => {
         if (buffer.numberOfChannels === 1) {
-          // Mono source: copy to all output channels
           const channelData = buffer.getChannelData(0);
           for (let channel = 0; channel < outputChannels; channel++) {
             combinedBuffer.getChannelData(channel).set(channelData, offset);
           }
         } else {
-          // Stereo source: copy each channel
           for (
             let channel = 0;
             channel < Math.min(outputChannels, buffer.numberOfChannels);
@@ -405,10 +231,7 @@ export function usePersonaVoices() {
           buffer.length + Math.ceil(gapDuration * audioContext.sampleRate);
       });
 
-      // Convert to WAV
       const wavBlob = audioBufferToWav(combinedBuffer);
-
-      // Create download link
       const url = URL.createObjectURL(wavBlob);
       const a = document.createElement("a");
       a.href = url;
@@ -424,13 +247,12 @@ export function usePersonaVoices() {
 
   return {
     audioMap,
-    isGenerating,
     currentDialogueIndex,
     volume,
     isPaused,
     hasEnded,
     handleVolumeChange,
-    generateAllVoices,
+    loadAudioMap,
     playDialogue,
     playAllDialogue,
     stopAudio,
@@ -440,17 +262,7 @@ export function usePersonaVoices() {
   };
 }
 
-const arrayBufferToDataUri = (buffer: ArrayBuffer) => {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
-  });
-  const base64 = window.btoa(binary);
-  return `data:audio/mp3;base64,${base64}`;
-};
-
-// Convert AudioBuffer to WAV format
+// Helper function (copied from original)
 const audioBufferToWav = (buffer: AudioBuffer): Blob => {
   const numberOfChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
@@ -473,7 +285,6 @@ const audioBufferToWav = (buffer: AudioBuffer): Blob => {
   const wav = new ArrayBuffer(headerLength + dataLength);
   const view = new DataView(wav);
 
-  // Write WAV header
   const writeString = (offset: number, string: string) => {
     for (let i = 0; i < string.length; i++) {
       view.setUint8(offset + i, string.charCodeAt(i));
@@ -484,17 +295,16 @@ const audioBufferToWav = (buffer: AudioBuffer): Blob => {
   view.setUint32(4, 36 + dataLength, true);
   writeString(8, "WAVE");
   writeString(12, "fmt ");
-  view.setUint32(16, 16, true); // fmt chunk size
+  view.setUint32(16, 16, true);
   view.setUint16(20, format, true);
   view.setUint16(22, numberOfChannels, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true); // byte rate
+  view.setUint32(28, sampleRate * blockAlign, true);
   view.setUint16(32, blockAlign, true);
   view.setUint16(34, bitDepth, true);
   writeString(36, "data");
   view.setUint32(40, dataLength, true);
 
-  // Write audio data
   let offset = 44;
   for (let i = 0; i < data.length; i++) {
     const sample = Math.max(-1, Math.min(1, data[i]));

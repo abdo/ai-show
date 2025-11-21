@@ -6,8 +6,8 @@ import { DownloadIcon } from "../../ui/icons/DownloadIcon";
 import { ReplayIcon } from "../../ui/icons/ReplayIcon";
 import { PauseIcon } from "../../ui/icons/PauseIcon";
 import { PlayIcon } from "../../ui/icons/PlayIcon";
-import { usePerspectives } from "../../hooks/usePerspectives";
-import { usePersonaVoices } from "../../hooks/usePersonaVoices";
+import { useShow } from "../../hooks/useShow";
+import { useAudioPlayback } from "../../hooks/useAudioPlayback";
 import "./TheatrePage.css";
 
 export function TheatrePage() {
@@ -20,15 +20,14 @@ export function TheatrePage() {
   // Use name from router state, or fall back to localStorage, or undefined
   const userName = routerName || localStorage.getItem("userName") || undefined;
 
-  const { story, fetchStory, isLoading, error } = usePerspectives();
+  const { story, audioMap: backendAudioMap, fetchShow, error } = useShow();
 
   const {
     audioMap,
-    generateAllVoices,
+    loadAudioMap,
     playAllDialogue,
     stopAudio,
     unlockAudio,
-    isGenerating,
     currentDialogueIndex,
     volume,
     isPaused,
@@ -36,9 +35,10 @@ export function TheatrePage() {
     handleVolumeChange,
     togglePause,
     downloadConversation,
-  } = usePersonaVoices();
+  } = useAudioPlayback();
 
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<'idle' | 'preparing' | 'calling' | 'ready'>('idle');
 
   // Redirect to home if no topic provided, fetch story once on mount
   useEffect(() => {
@@ -47,9 +47,18 @@ export function TheatrePage() {
       return;
     }
     unlockAudio();
-    fetchStory(topic, userName, mode as 'conversation' | 'story');
+    
+    setLoadingStage('preparing');
+    fetchShow(topic, userName, mode as 'conversation' | 'story');
+    
+    // Fake transition to "Calling actors..." after 1.5s
+    const timer = setTimeout(() => {
+      setLoadingStage((prev) => prev === 'preparing' ? 'calling' : prev);
+    }, 1500);
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userName, navigate]); // Only depend on topic, userName, and navigate, not the functions
+  }, [topic, userName, navigate]);
 
   // Stop audio when component unmounts (navigating away)
   useEffect(() => {
@@ -58,10 +67,13 @@ export function TheatrePage() {
     };
   }, [stopAudio]);
 
+  // Load audio map when backend data is ready
   useEffect(() => {
-    if (!story || !story.characters.length || !story.dialogue.length) return;
-    generateAllVoices(story.dialogue, story.characters);
-  }, [generateAllVoices, story]);
+    if (story && backendAudioMap) {
+      loadAudioMap(backendAudioMap, story.dialogue);
+      setLoadingStage('ready');
+    }
+  }, [story, backendAudioMap, loadAudioMap]);
 
   // Convert characters to grid items format
   const gridItems = useMemo(() => {
@@ -96,15 +108,8 @@ export function TheatrePage() {
   };
 
   const allVoicesReady = useMemo(() => {
-    if (!story || isGenerating) return false;
-    if (story.dialogue.length === 0) return false;
-    
-    // Check if all dialogue lines have ready audio
-    return story.dialogue.every((_, index) => {
-      const audio = audioMap[index];
-      return audio && audio.status === "ready" && audio.audioSrc;
-    });
-  }, [story, isGenerating, audioMap]);
+    return loadingStage === 'ready';
+  }, [loadingStage]);
 
   // Get the character currently speaking
   const speakingCharacterId = useMemo(() => {
@@ -142,11 +147,9 @@ export function TheatrePage() {
       <div className="theatre-header">
         <p className="scenario-text">"{topic}"</p>
         <div className="status-line">
-          {isLoading && <span className="status">Preparing the scene...</span>}
-          {!isLoading && !allVoicesReady && (
-            <span className="status">Calling actors...</span>
-          )}
-          {allVoicesReady && (
+          {loadingStage === 'preparing' && <span className="status">Preparing the scene...</span>}
+          {loadingStage === 'calling' && <span className="status">Calling actors...</span>}
+          {loadingStage === 'ready' && (
             <span className="status-ready">Ready to play</span>
           )}
         </div>

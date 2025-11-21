@@ -1,10 +1,10 @@
-// Pravatar avatar IDs by gender
-export const pravatarImgIdsForMales = [
-  3, 4, 6, 7, 8, 11, 12, 13, 14, 15, 17, 18, 33, 50, 51, 52, 53, 54, 55, 56, 57,
-  58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
+// Avatar IDs from pravatar.cc
+// These IDs correspond to different avatar images available on the service
+
+export const pravatarImgIdsForMales: number[] = [
+  12, 13, 14, 15, 31, 32, 33, 51, 52, 54, 59, 60, 68, 70
 ];
 
-export const pravatarImgIdsForFemales = [
-  5, 9, 10, 16, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 34, 36, 38,
-  39, 40, 41, 43, 44, 45, 47, 48, 49,
+export const pravatarImgIdsForFemales: number[] = [
+  1, 5, 9, 10, 16, 19, 20, 24, 25, 26, 29, 30, 41, 44, 45, 47, 48, 49
 ];

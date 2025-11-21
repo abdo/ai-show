@@ -2,8 +2,25 @@ import { openAiTTSApiKey } from "../keys.ignore";
 import { AppError } from "../utils/AppError";
 import { extractToneAndCleanText } from "../utils/textCleaner";
 import { StoryData } from "../types";
+import { CharacterRole, availableRoles, roleDescriptions } from "../constants/theatreCharacters";
 
 export class VoiceService {
+  // Helper to extract standardized role from character's role text
+  private static extractRole(roleText: string): CharacterRole {
+    const normalized = roleText.toLowerCase().trim();
+    
+    // Check if it's an exact match with any role
+    if (availableRoles.includes(normalized as CharacterRole)) {
+      return normalized as CharacterRole;
+    }
+    
+    // Otherwise, find the first role that the text includes
+    const matchedRole = availableRoles.find(role => normalized.includes(role));
+    
+    // Fallback to mediator if no match
+    return matchedRole || "mediator";
+  }
+
   static async generateVoices(story: StoryData): Promise<Record<number, string>> {
     if (!openAiTTSApiKey) {
       throw new AppError(500, "MISSING_API_KEY", "OpenAI API Key is missing");
@@ -20,8 +37,13 @@ export class VoiceService {
         return;
       }
 
-      const { cleanedText } = extractToneAndCleanText(line.text);
+      const { cleanedText, tone } = extractToneAndCleanText(line.text);
       
+      // Determine instructions based on role and tone
+      const characterRole = this.extractRole(character.role);
+      const roleDescription = roleDescriptions[characterRole];
+      const instructions = tone || roleDescription;
+
       try {
         const response = await fetch("https://api.openai.com/v1/audio/speech", {
           method: "POST",
@@ -32,7 +54,9 @@ export class VoiceService {
           body: JSON.stringify({
             model: "gpt-4o-mini-tts",
             voice: character.voiceId,
+            speed: 1.1, // Slightly faster for more natural conversation
             input: cleanedText,
+            instructions: instructions,
           }),
         });
 

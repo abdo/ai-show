@@ -11,28 +11,55 @@ export class StoryService {
     return array[Math.floor(Math.random() * array.length)];
   }
 
-  private static assignAvatarsAndColors(characters: Character[]): Character[] {
-    const usedImages = new Set<string>();
+  private static getRandomAvatarId(
+    gender: "male" | "female",
+    usedIds: Set<string>
+  ): number {
+    const pool = gender === "male" ? pravatarImgIdsForMales : pravatarImgIdsForFemales;
+    const available = pool.filter((id) => !usedIds.has(id.toString()));
 
-    return characters.map((char) => {
+    if (available.length === 0) {
+      // If all used, pick randomly from pool
+      const id = this.getRandomItem(pool);
+      usedIds.add(id.toString());
+      return id;
+    }
+
+    const id = this.getRandomItem(available);
+    usedIds.add(id.toString());
+    return id;
+  }
+
+  private static getRandomVoice(
+    gender: "male" | "female",
+    usedVoices: Set<string>
+  ): string {
+    const pool = gender === "male" ? maleVoices : femaleVoices;
+    const available = pool.filter((voice) => !usedVoices.has(voice));
+
+    // If we still have unused voices, pick from them
+    // Otherwise, pick from the entire pool
+    const selectionPool = available.length > 0 ? available : pool;
+    const voice = this.getRandomItem(selectionPool);
+
+    usedVoices.add(voice);
+    return voice;
+  }
+
+  private static assignAvatarsAndColors(characters: Character[]): Character[] {
+    const usedAvatarIds = new Set<string>();
+    const usedVoices = new Set<string>();
+
+    return characters.map((char, index) => {
+      // Ensure gender is set (fallback to alternating if missing)
+      const gender = char.gender || (index % 2 === 0 ? "male" : "female");
+
       // Assign Image
-      let imageId;
-      const pool = char.gender === "male" ? pravatarImgIdsForMales : pravatarImgIdsForFemales;
-      
-      // Try to find an unused image
-      const availableImages = pool.filter(id => !usedImages.has(id.toString()));
-      if (availableImages.length > 0) {
-        imageId = this.getRandomItem(availableImages);
-      } else {
-        imageId = this.getRandomItem(pool); // Fallback to reusing if we run out
-      }
-      usedImages.add(imageId.toString());
-      
-      const image = `https://i.pravatar.cc/150?u=${imageId}`;
+      const imageId = this.getRandomAvatarId(gender, usedAvatarIds);
+      const image = `https://i.pravatar.cc/300?img=${imageId}`;
 
       // Assign Voice
-      const voicePool = char.gender === "male" ? maleVoices : femaleVoices;
-      const voiceId = this.getRandomItem(voicePool);
+      const voiceId = char.voiceId || this.getRandomVoice(gender, usedVoices);
 
       // Assign Colors (if not provided by LLM)
       let borderColor = char.borderColor;
@@ -47,6 +74,7 @@ export class StoryService {
 
       return {
         ...char,
+        gender, // Ensure gender is preserved/set
         image,
         voiceId,
         borderColor,
@@ -80,7 +108,8 @@ export class StoryService {
             },
           ],
           model: "llama-3.3-70b-versatile",
-          temperature: 0.7,
+          temperature: 0.9,
+          top_p: 0.95,
           max_tokens: 4000,
           response_format: { type: "json_object" },
         },
@@ -98,14 +127,14 @@ export class StoryService {
       }
 
       const storyData = JSON.parse(content) as StoryData;
-      
+
       // Enrich characters with avatars, voices, and colors
       storyData.characters = this.assignAvatarsAndColors(storyData.characters);
 
       return storyData;
     } catch (error) {
       if (error instanceof AppError) throw error;
-      
+
       console.error("Error generating story:", error);
       throw new AppError(502, "STORY_GENERATION_ERROR", "Failed to generate story content", error);
     }

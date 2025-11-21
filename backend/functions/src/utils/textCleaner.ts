@@ -35,6 +35,11 @@ export function extractToneAndCleanText(text: string): {
     ""
   );
 
+  // Replace ellipses with em-dashes to prevent "dot dot dot" pronunciation
+  // This ensures natural pauses instead of literal reading
+  cleaned = cleaned.replace(/…/g, " — "); // Unicode ellipsis
+  cleaned = cleaned.replace(/\.{2,}/g, " — "); // 2 or more dots
+
   // Remove multiple spaces and trim
   cleaned = cleaned.replace(/\s+/g, " ").trim();
 
