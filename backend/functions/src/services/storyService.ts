@@ -51,8 +51,21 @@ export class StoryService {
     const usedVoices = new Set<string>();
 
     return characters.map((char, index) => {
-      // Ensure gender is set (fallback to alternating if missing) and normalize
-      const gender = (char.gender || (index % 2 === 0 ? "male" : "female")).toLowerCase() as "male" | "female";
+      // Normalize and validate gender
+      let rawGender = char.gender || (index % 2 === 0 ? "male" : "female");
+      let normalizedGender = rawGender.toLowerCase().trim();
+
+      // Strict validation - ensure it's exactly "male" or "female"
+      let gender: "male" | "female";
+      if (normalizedGender === "male") {
+        gender = "male";
+      } else if (normalizedGender === "female") {
+        gender = "female";
+      } else {
+        // Fallback if somehow we get an invalid value
+        console.warn(`Invalid gender value "${rawGender}" for character ${char.name}, defaulting to ${index % 2 === 0 ? "male" : "female"}`);
+        gender = index % 2 === 0 ? "male" : "female";
+      }
 
       // Assign Image
       const imageId = this.getRandomAvatarId(gender, usedAvatarIds);
