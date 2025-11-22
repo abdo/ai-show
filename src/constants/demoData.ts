@@ -3,7 +3,7 @@
  * Fallback story data for development and testing
  */
 
-import type { StoryData } from "../hooks/usePerspectives";
+import type { StoryData } from "../services/api";
 
 export const demoStory: StoryData = {
   characters: [
