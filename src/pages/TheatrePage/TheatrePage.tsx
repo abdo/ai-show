@@ -6,6 +6,7 @@ import { DownloadIcon } from "../../ui/icons/DownloadIcon";
 import { ReplayIcon } from "../../ui/icons/ReplayIcon";
 import { PauseIcon } from "../../ui/icons/PauseIcon";
 import { PlayIcon } from "../../ui/icons/PlayIcon";
+import { ScrollTextIcon } from "../../ui/icons/ScrollTextIcon";
 import { useShow } from "../../hooks/useShow";
 import { useAudioPlayback } from "../../hooks/useAudioPlayback";
 import "./TheatrePage.css";
@@ -118,6 +119,27 @@ export function TheatrePage() {
     navigate("/");
   };
 
+  const downloadScript = () => {
+    if (!story) return;
+
+    const scriptContent = story.dialogue
+      .map((line) => {
+        const character = story.characters.find((c) => c.id === line.characterId);
+        return `${character?.name || line.characterId}: ${line.text}`;
+      })
+      .join("\n\n");
+
+    const blob = new Blob([scriptContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${topic.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_script.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const allVoicesReady = useMemo(() => {
     return !isLoading && story !== null;
   }, [isLoading, story]);
@@ -216,7 +238,13 @@ export function TheatrePage() {
                     className="drawer-action-btn drawer-icon-btn"
                     onClick={downloadConversation}
                   >
-                    <DownloadIcon /> Download
+                    <DownloadIcon /> Audio
+                  </button>
+                  <button
+                    className="drawer-action-btn drawer-icon-btn"
+                    onClick={downloadScript}
+                  >
+                    <ScrollTextIcon /> Script
                   </button>
                 </div>
               </div>
@@ -242,9 +270,16 @@ export function TheatrePage() {
                 <button
                   className="side-action-btn download-side-btn"
                   onClick={downloadConversation}
-                  title="Download"
+                  title="Download Audio"
                 >
                   <DownloadIcon />
+                </button>
+                <button
+                  className="side-action-btn download-script-btn"
+                  onClick={downloadScript}
+                  title="Download Script"
+                >
+                  <ScrollTextIcon />
                 </button>
               </div>
             </>
@@ -259,32 +294,6 @@ export function TheatrePage() {
               selectedPersonaId={speakingCharacterId}
             />
           </div>
-
-          {conversationStarted && (
-            <div className="dialogue-display">
-              {story?.dialogue.map((line, index) => {
-                const character = story.characters.find(
-                  (c) => c.id === line.characterId
-                );
-                const isActive = index === currentDialogueIndex;
-                const hasPlayed = index < currentDialogueIndex;
-
-                return (
-                  <div
-                    key={index}
-                    className={`dialogue-line ${isActive ? "active" : ""} ${
-                      hasPlayed ? "played" : ""
-                    }`}
-                  >
-                    <span className="character-name">
-                      {character?.name} ({line.characterId}):
-                    </span>{" "}
-                    <span className="dialogue-text">{line.text}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </>
       )}
     </div>
