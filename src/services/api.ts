@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/ai-show-afb45/us-central1/getShow";
+const API_URL = "https://getshow-ejinsneowq-uc.a.run.app";
 
 export interface ShowRequest {
   userInput: string;

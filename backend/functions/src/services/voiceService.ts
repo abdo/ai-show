@@ -1,4 +1,4 @@
-import { openAiTTSApiKey } from "../keys.ignore";
+import { config } from "../config";
 import { AppError } from "../utils/AppError";
 import { extractToneAndCleanText } from "../utils/textCleaner";
 import { StoryData } from "../types";
@@ -8,21 +8,21 @@ export class VoiceService {
   // Helper to extract standardized role from character's role text
   private static extractRole(roleText: string): CharacterRole {
     const normalized = roleText.toLowerCase().trim();
-    
+
     // Check if it's an exact match with any role
     if (availableRoles.includes(normalized as CharacterRole)) {
       return normalized as CharacterRole;
     }
-    
+
     // Otherwise, find the first role that the text includes
     const matchedRole = availableRoles.find(role => normalized.includes(role));
-    
+
     // Fallback to mediator if no match
     return matchedRole || "mediator";
   }
 
   static async generateVoices(story: StoryData): Promise<Record<number, string>> {
-    if (!openAiTTSApiKey) {
+    if (!config.openAiTTSApiKey) {
       throw new AppError(500, "MISSING_API_KEY", "OpenAI API Key is missing");
     }
 
@@ -38,7 +38,7 @@ export class VoiceService {
       }
 
       const { cleanedText, tone } = extractToneAndCleanText(line.text);
-      
+
       // Determine instructions based on role and tone
       const characterRole = this.extractRole(character.role);
       const roleDescription = roleDescriptions[characterRole];
@@ -49,7 +49,7 @@ export class VoiceService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${openAiTTSApiKey}`,
+            Authorization: `Bearer ${config.openAiTTSApiKey}`,
           },
           body: JSON.stringify({
             model: "gpt-4o-mini-tts",
@@ -67,7 +67,7 @@ export class VoiceService {
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const base64Audio = buffer.toString("base64");
-        
+
         audioMap[index] = base64Audio;
       } catch (error) {
         console.error(`Failed to generate voice for line ${index}:`, error);

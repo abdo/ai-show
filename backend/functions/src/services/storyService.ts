@@ -1,6 +1,6 @@
 import axios from "axios";
 import { AppError } from "../utils/AppError";
-import { groqApiKey } from "../keys.ignore";
+import { config } from "../config";
 import { storyGenerationPrompt } from "../constants/prompts";
 import { pravatarImgIdsForMales, pravatarImgIdsForFemales } from "../constants/avatarConstants";
 import { maleVoices, femaleVoices } from "../constants/theatreCharacters";
@@ -88,7 +88,7 @@ export class StoryService {
     userName?: string,
     mode: "conversation" | "story" = "conversation"
   ): Promise<StoryData> {
-    if (!groqApiKey) {
+    if (!config.groqApiKey) {
       throw new AppError(500, "MISSING_API_KEY", "Groq API Key is missing");
     }
 
@@ -116,7 +116,7 @@ export class StoryService {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${groqApiKey}`,
+            Authorization: `Bearer ${config.groqApiKey}`,
           },
         }
       );
