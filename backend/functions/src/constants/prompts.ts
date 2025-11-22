@@ -217,7 +217,7 @@ Output ONLY this JSON (no markdown, no explanations):
     {
       "id": "lowercase-kebab-case, something that could be their twitter handle, realistic, maybe funny",
       "name": "First name only (realistic, culturally appropriate)",
-      "gender": "male OR female (choose based on the character)",
+      "gender": "string of exact string 'male' OR 'female' (choose based on the character)",
       "role": "MUST be ONE of the 20 standardized roles listed above (e.g., 'emotional', 'analytical', 'provocateur')",
       "image": "LEAVE EMPTY - will be auto-assigned",
       "borderColor": "#HEXCODE (use vibrant: purples, teals, oranges, pinks, not muted)",
