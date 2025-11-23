@@ -3,6 +3,6 @@
 // In production, only allow production domain
 
 const devOrigins = ["http://localhost:5173"];
-const prodOrigins = ["https://ai-show-theta.vercel.app"];
+const prodOrigins = ["https://ai-show-theta.vercel.app", "https://aishow.studio"];
 
 export const allowedOrigins = process.env.FUNCTIONS_EMULATOR ? devOrigins : prodOrigins;
