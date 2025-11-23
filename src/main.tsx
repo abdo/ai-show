@@ -5,6 +5,8 @@ import posthog from 'posthog-js'
 import './index.css'
 import App from './App.tsx'
 
+import { SpeedInsights } from "@vercel/speed-insights/react"
+
 // Initialize PostHog if API key exists
 const posthogApiKey = import.meta.env.VITE_POSTHOG_API_KEY;
 if (posthogApiKey && !posthogApiKey.includes("...")) {
@@ -22,9 +24,13 @@ createRoot(document.getElementById('root')!).render(
     {isPostHogEnabled ? (
       <PostHogProvider client={posthog}>
         <App />
+        <SpeedInsights />
       </PostHogProvider>
     ) : (
-      <App />
+      <>
+        <App />
+        <SpeedInsights />
+      </>
     )}
   </StrictMode>,
 )

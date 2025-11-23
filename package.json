@@ -13,6 +13,7 @@
     "deploy:backend": "cd backend && firebase deploy"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.13.2",
     "gsap": "^3.13.0",
     "ogl": "^1.0.11",
