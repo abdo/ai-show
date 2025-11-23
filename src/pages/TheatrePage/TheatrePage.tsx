@@ -62,6 +62,14 @@ export function TheatrePage() {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < BREAKPOINTS.TABLET);
   const [isScriptOverlayOpen, setIsScriptOverlayOpen] = useState(false);
 
+  // Hide body scrollbar on theatre page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < BREAKPOINTS.TABLET);
