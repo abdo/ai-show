@@ -54,7 +54,7 @@ export class VoiceService {
           body: JSON.stringify({
             model: "gpt-4o-mini-tts",
             voice: character.voiceId,
-            speed: 1.05, // Slightly faster for more natural conversation
+            speed: 1.1, // Slightly faster for more natural conversation
             input: cleanedText,
             instructions: instructions,
           }),
