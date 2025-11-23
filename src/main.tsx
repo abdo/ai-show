@@ -13,7 +13,7 @@ if (posthogApiKey && !posthogApiKey.includes("...")) {
   posthog.init(posthogApiKey, {
     api_host: "https://eu.i.posthog.com",
     person_profiles: 'identified_only',
-    debug: true,
+    debug: false,
   });
 }
 

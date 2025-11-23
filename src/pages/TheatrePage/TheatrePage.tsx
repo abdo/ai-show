@@ -11,7 +11,7 @@ import { ScrollTextIcon } from "../../ui/icons/ScrollTextIcon";
 import { ScriptOverlay } from "../../components/ScriptOverlay/ScriptOverlay";
 import { useShow } from "../../hooks/useShow";
 import { useAudioPlayback } from "../../hooks/useAudioPlayback";
-import { useDynamicScale } from "../../hooks/useDynamicScale";
+import { useDynamicallyZoomLargeScreens } from "../../hooks/useDynamicallyZoomLargeScreens";
 import { BREAKPOINTS } from "../../constants/breakpoints";
 import "./TheatrePage.css";
 
@@ -71,10 +71,13 @@ export function TheatrePage() {
   }, []);
 
   // Dynamic scaling for large screens
-  const scaleStyle = useDynamicScale(BREAKPOINTS.DESKTOP_LARGE);
+  const scaleStyle = useDynamicallyZoomLargeScreens();
 
   // Redirect to home if no topic provided, fetch story once on mount
   useEffect(() => {
+    // Scroll to top when page loads
+    window.scrollTo(0, 0);
+    
     if (!topic) {
       navigate("/", { replace: true });
       return;
@@ -299,42 +302,44 @@ export function TheatrePage() {
           )}
 
           {/* Desktop Side Actions */}
-          <aside className="side-actions desktop-only" aria-label="Playback controls">
-            <button
-              className="side-action-btn pause-side-btn"
-              onClick={togglePause}
-              title={
-                hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"
-              }
-              aria-label={hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"}
-            >
-              {hasEnded || isPaused ? <PlayIcon /> : <PauseIcon />}
-            </button>
-            <button
-              className="side-action-btn replay-side-btn"
-              onClick={replayConversation}
-              title="Replay"
-              aria-label="Replay conversation"
-            >
-              <ReplayIcon />
-            </button>
-            <button
-              className="side-action-btn download-side-btn"
-              onClick={downloadConversation}
-              title="Download Audio"
-              aria-label="Download Audio"
-            >
-              <DownloadIcon />
-            </button>
-            <button
-              className="side-action-btn download-script-btn"
-              onClick={handleScriptClick}
-              title="Download Script"
-              aria-label="Download Script"
-            >
-              <ScrollTextIcon />
-            </button>
-          </aside>
+          {conversationStarted && (
+            <aside className="side-actions desktop-only" aria-label="Playback controls">
+              <button
+                className="side-action-btn pause-side-btn"
+                onClick={togglePause}
+                title={
+                  hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"
+                }
+                aria-label={hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"}
+              >
+                {hasEnded || isPaused ? <PlayIcon /> : <PauseIcon />}
+              </button>
+              <button
+                className="side-action-btn replay-side-btn"
+                onClick={replayConversation}
+                title="Replay"
+                aria-label="Replay conversation"
+              >
+                <ReplayIcon />
+              </button>
+              <button
+                className="side-action-btn download-side-btn"
+                onClick={downloadConversation}
+                title="Download Audio"
+                aria-label="Download Audio"
+              >
+                <DownloadIcon />
+              </button>
+              <button
+                className="side-action-btn download-script-btn"
+                onClick={handleScriptClick}
+                title="Download Script"
+                aria-label="Download Script"
+              >
+                <ScrollTextIcon />
+              </button>
+            </aside>
+          )}
 
           <section className="grid-wrapper" aria-label="Character stage">
             {isMobileView ? (

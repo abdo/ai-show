@@ -168,7 +168,7 @@ OPENAI_TTS_API_KEY=sk-proj-...    # Required
 ### React (Frontend)
 - Functional components only
 - Hooks: useState, useEffect, useCallback, useMemo, useRef
-- **Prefer reusable hooks**: Extract complex or reusable logic into custom hooks (e.g., `useDynamicScale`) instead of polluting components.
+- **Prefer reusable hooks**: Extract complex or reusable logic into custom hooks (e.g., `useDynamicallyZoomLargeScreens`) instead of polluting components.
 - Co-locate CSS with components
 - React Router v7 for navigation
 

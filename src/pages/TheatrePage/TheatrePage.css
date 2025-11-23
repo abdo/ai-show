@@ -1,10 +1,13 @@
 .theatre-page {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height - accounts for mobile browser UI */
+  max-height: 100dvh;
   overflow: hidden;
   padding: 3rem 2rem;
   animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
   --angle: 90deg;
   background: #0a0a0a;
   color: #e0e0e0;
