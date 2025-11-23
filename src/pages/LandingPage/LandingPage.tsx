@@ -46,9 +46,9 @@ export function LandingPage() {
   };
 
   return (
-    <div className="landing-page">
+    <main className="landing-page">
       {/* Hero Section with Theatre Spotlight */}
-      <div className="hero-section">
+      <header className="hero-section">
         <div className="theatre-background">
           <img className="theatre-img" src={theatreImage} alt="Theatre stage" />
           <div className="light1">
@@ -75,15 +75,16 @@ export function LandingPage() {
                 .querySelector(".input-section")
                 ?.scrollIntoView({ behavior: "smooth" });
             }}
+            aria-label="Scroll to create your show"
           >
             Create Your Show
-            <span className="cta-arrow">👇</span>
+            <span className="cta-arrow" aria-hidden="true">👇</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Input Section */}
-      <div className="input-section">
+      <section className="input-section" aria-label="Create your story">
         <div className="input-container">
           <h2 className="input-title">What's your story?</h2>
           <p className="input-subtitle">
@@ -98,6 +99,7 @@ export function LandingPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="I've been working at my company for five years, and I just found out that my younger colleague, who joined last year, is making more than me..."
               rows={4}
+              aria-label="Your story input"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                   handleSubmit(input);
@@ -112,6 +114,7 @@ export function LandingPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
+                aria-label="Your name (optional)"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                     handleSubmit(input);
@@ -125,8 +128,9 @@ export function LandingPage() {
               className="submit-button"
               onClick={() => handleSubmit(input)}
               disabled={!input.trim()}
+              aria-label="Start the show"
             >
-              Start the Show 🎭
+              Start the Show <span aria-hidden="true">🎭</span>
             </button>
             
             <ModeSwitch
@@ -137,12 +141,13 @@ export function LandingPage() {
 
           <div className="examples-section">
             <p className="examples-label">or try:</p>
-            <div className="examples-grid">
+            <div className="examples-grid" role="list">
               {examplePrompts.map((prompt, index) => (
                 <button
                   key={index}
                   className="example-button"
                   onClick={() => handleSubmit(prompt)}
+                  role="listitem"
                 >
                   {prompt}
                 </button>
@@ -150,7 +155,7 @@ export function LandingPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

@@ -228,3 +228,25 @@ Edit `backend/functions/src/constants/prompts.ts`
 ---
 
 **Last Updated**: November 2024
+
+---
+
+## SEO & Accessibility Guidelines
+
+### Semantic HTML
+- Use `<main>` for primary content
+- Use `<header>`, `<footer>`, `<nav>`, `<aside>` for structural elements
+- Use `<section>` or `<article>` instead of generic `<div>` where appropriate
+- Ensure heading hierarchy (`h1` -> `h2` -> `h3`) is logical and sequential
+
+### Accessibility (a11y)
+- All interactive elements (buttons, links) MUST have accessible names:
+  - Visible text content
+  - `aria-label` for icon-only buttons
+- Images MUST have descriptive `alt` text (or empty string if decorative)
+- Use `aria-hidden="true"` for decorative icons/elements
+- Ensure sufficient color contrast for text
+
+### Meta Tags
+- Maintain `description`, `keywords`, `author`, and `theme-color` in `index.html`
+- Ensure Open Graph (`og:`) and Twitter Card (`twitter:`) tags are present and accurate

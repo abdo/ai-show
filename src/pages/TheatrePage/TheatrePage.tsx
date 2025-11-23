@@ -208,19 +208,19 @@ export function TheatrePage() {
   }, [topic]);
 
   return (
-    <div className="theatre-page" style={scaleStyle}>
+    <main className="theatre-page" style={scaleStyle}>
       {/* Desktop Back Button */}
       <button
         className="back-arrow-btn desktop-only"
         onClick={handleBack}
-        aria-label="Go back"
+        aria-label="Go back to home"
       >
         ← Back
       </button>
 
       {/* Mobile Top Actions (Back, Audio, Script) */}
-      <div className="mobile-top-actions">
-        <button className="icon-btn" onClick={handleBack} aria-label="Back">
+      <nav className="mobile-top-actions" aria-label="Mobile navigation">
+        <button className="icon-btn" onClick={handleBack} aria-label="Go back to home">
           ←
         </button>
         <div className="right-actions">
@@ -231,7 +231,7 @@ export function TheatrePage() {
             <ScrollTextIcon />
           </button>
         </div>
-      </div>
+      </nav>
 
       {/* Script Overlay for Mobile */}
       <ScriptOverlay
@@ -248,7 +248,7 @@ export function TheatrePage() {
             <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
           )}
 
-          <div className="theatre-lights">
+          <div className="theatre-lights" aria-hidden="true">
             <div className="light1">
               <div className="ray"></div>
             </div>
@@ -259,11 +259,11 @@ export function TheatrePage() {
         </>
       )}
 
-      <div className="theatre-header">
-        <p className="scenario-text" {...(isTruncated ? { title: topic } : {})}>"{truncatedTopic}"</p>
+      <header className="theatre-header">
+        <h1 className="scenario-text" {...(isTruncated ? { title: topic } : {})}>"{truncatedTopic}"</h1>
         
         <div className={`start-controls ${conversationStarted ? "hidden" : ""}`}>
-          <div className="status-line">
+          <div className="status-line" role="status" aria-live="polite">
             {isLoading && <span className="status">{LOADING_MESSAGES[loadingMessageIndex]}</span>}
             {!isLoading && (
               <span className="status-ready">Ready to play</span>
@@ -274,37 +274,39 @@ export function TheatrePage() {
             <button
               className="play-story-btn"
               onClick={startConversation}
+              aria-label="Start the show"
             >
               ▶ Start the show
             </button>
           )}
         </div>
 
-        {error && <p className="error-text">{error}</p>}
-      </div>
+        {error && <p className="error-text" role="alert">{error}</p>}
+      </header>
 
       {allVoicesReady && gridItems.length > 0 && (
         <>
           {/* Mobile Bottom Controls (Play/Pause, Replay) */}
           {conversationStarted && isMobileView && (
-            <div className="mobile-bottom-controls">
-              <button className="control-btn main-control" onClick={togglePause}>
+            <div className="mobile-bottom-controls" role="group" aria-label="Playback controls">
+              <button className="control-btn main-control" onClick={togglePause} aria-label={hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"}>
                 {hasEnded || isPaused ? <PlayIcon /> : <PauseIcon />}
               </button>
-              <button className="control-btn" onClick={replayConversation}>
+              <button className="control-btn" onClick={replayConversation} aria-label="Replay conversation">
                 <ReplayIcon />
               </button>
             </div>
           )}
 
           {/* Desktop Side Actions */}
-          <div className="side-actions desktop-only">
+          <aside className="side-actions desktop-only" aria-label="Playback controls">
             <button
               className="side-action-btn pause-side-btn"
               onClick={togglePause}
               title={
                 hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"
               }
+              aria-label={hasEnded ? "Play Again" : isPaused ? "Resume" : "Pause"}
             >
               {hasEnded || isPaused ? <PlayIcon /> : <PauseIcon />}
             </button>
@@ -312,6 +314,7 @@ export function TheatrePage() {
               className="side-action-btn replay-side-btn"
               onClick={replayConversation}
               title="Replay"
+              aria-label="Replay conversation"
             >
               <ReplayIcon />
             </button>
@@ -319,6 +322,7 @@ export function TheatrePage() {
               className="side-action-btn download-side-btn"
               onClick={downloadConversation}
               title="Download Audio"
+              aria-label="Download Audio"
             >
               <DownloadIcon />
             </button>
@@ -326,12 +330,13 @@ export function TheatrePage() {
               className="side-action-btn download-script-btn"
               onClick={handleScriptClick}
               title="Download Script"
+              aria-label="Download Script"
             >
               <ScrollTextIcon />
             </button>
-          </div>
+          </aside>
 
-          <div className="grid-wrapper">
+          <section className="grid-wrapper" aria-label="Character stage">
             {isMobileView ? (
               <ChromaGallery
                 items={gridItems}
@@ -346,9 +351,9 @@ export function TheatrePage() {
                 selectedPersonaId={speakingCharacterId}
               />
             )}
-          </div>
+          </section>
         </>
       )}
-    </div>
+    </main>
   );
 }
