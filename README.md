@@ -26,8 +26,8 @@ AI Show transforms your stories into theatrical performances through AI-generate
 
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/ai-emotions.git
-cd ai-emotions
+git clone https://github.com/abdo/ai-show
+cd ai-show
 npm install
 
 # Install backend dependencies
@@ -77,7 +77,7 @@ Backend: `http://localhost:5000`
 ## 📁 Project Structure
 
 ```
-ai-emotions/
+ai-show/
 ├── src/                      # Frontend code
 │   ├── components/          # React components
 │   ├── pages/               # Page components

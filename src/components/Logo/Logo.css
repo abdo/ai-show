@@ -1,0 +1,13 @@
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 55px;
+  width: fit-content;
+}
+
+.logo-img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}

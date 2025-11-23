@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModeSwitch } from "../../components/ModeSwitch/ModeSwitch";
+import { Logo } from "../../components/Logo/Logo";
+import { Footer } from "../../components/Footer/Footer";
 import "./LandingPage.css";
 import theatreImage from "../../assets/theatre.webp";
 
@@ -49,6 +51,9 @@ export function LandingPage() {
     <main className="landing-page">
       {/* Hero Section with Theatre Spotlight */}
       <header className="hero-section">
+        <div className="logo-container">
+          <Logo />
+        </div>
         <div className="theatre-background">
           <img className="theatre-img" src={theatreImage} alt="Theatre stage" />
           <div className="light1">
@@ -156,6 +161,8 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      
+      <Footer />
     </main>
   );
 }

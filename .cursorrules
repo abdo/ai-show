@@ -38,7 +38,7 @@
 ## Project Structure
 
 ```
-ai-emotions/
+ai-show/
 ├── src/                              # Frontend
 │   ├── pages/
 │   │   ├── LandingPage/             # Input + mode selection (/)
