@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy:backend": "cd backend && firebase deploy"
+    "deploy:backend": "cd backend/functions && npm run build && cd .. && firebase deploy"
   },
   "dependencies": {
     "@vercel/speed-insights": "^1.2.0",
