@@ -71,8 +71,8 @@ Backend: `http://localhost:5000`
 
 > [!TIP]
 > **Quick Environment Check**: Before starting, verify these files have the correct dev URLs:
-> - Frontend: `src/services/apiUrl.ts` → Should point to `http://localhost:5000/ai-show-afb45/us-central1/getShow`
-> - Backend: `backend/functions/src/allowedOrigins.ts` → Should include `http://localhost:5173`
+> - Frontend: `src/services/apiUrl.ts` → Should point to `http://localhost:5000/ai-show-afb45/us-central1/getShow` (or the url of the running firebase function)
+> - Backend: `backend/functions/src/allowedOrigins.ts` → Should include `http://localhost:5173` (or the url of the running frontend project)
 
 ## 📁 Project Structure
 

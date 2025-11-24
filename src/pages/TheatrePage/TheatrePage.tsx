@@ -156,45 +156,45 @@ export function TheatrePage() {
     setIsScriptOverlayOpen(!isScriptOverlayOpen);
   };
 
-  const downloadScript = () => {
-    if (!story) return;
-
-    const scriptContent = story.dialogue
-      .map((line) => {
-        const character = story.characters.find((c) => c.id === line.characterId);
-        return `${character?.name || line.characterId}: ${line.text}`;
-      })
-      .join("\n\n");
-
-    const blob = new Blob([scriptContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${topic.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_script.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleNewScenario = () => {
+    stopAudio();
+    setIsLoading(true);
+    setLoadingMessageIndex(0);
+    setConversationStarted(false);
+    fetchShow(topic, userName, mode as 'conversation' | 'story');
   };
 
   const handleScriptClick = () => {
     if (isMobileView) {
       toggleScriptOverlay();
     } else {
-      downloadScript();
+      // For desktop, we might want to download it or show a modal
+      // For now, let's just download it as before
+      const scriptContent = story?.dialogue
+        .map((d) => `${d.characterId}: ${d.text}`)
+        .join("\n\n");
+      
+      if (!scriptContent) return;
+
+      const blob = new Blob([scriptContent], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${topic.slice(0, 20)}-script.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   };
 
-  // Generate script content for overlay
+  // Memoize script lines for the overlay
   const scriptLines = useMemo(() => {
     if (!story) return [];
-    return story.dialogue.map((line) => {
-      const character = story.characters.find((c) => c.id === line.characterId);
-      return {
-        characterName: character?.name || line.characterId,
-        text: line.text
-      };
-    });
+    return story.dialogue.map(d => ({
+      characterName: story.characters.find(c => c.id === d.characterId)?.name || d.characterId,
+      text: d.text
+    }));
   }, [story]);
 
   const allVoicesReady = useMemo(() => {
@@ -227,6 +227,15 @@ export function TheatrePage() {
         aria-label="Go back to home"
       >
         ← Back
+      </button>
+
+      {/* Desktop New Scenario Button */}
+      <button
+        className="new-scenario-btn desktop-only"
+        onClick={handleNewScenario}
+        aria-label="Generate new scenario"
+      >
+        New Scenario ↻
       </button>
 
       {/* Mobile Top Actions (Back, Audio, Script) */}
@@ -307,6 +316,14 @@ export function TheatrePage() {
                 <ReplayIcon />
               </button>
             </div>
+          )}
+
+          {/* Mobile New Scenario Button (Separate) */}
+          {conversationStarted && isMobileView && (
+            <button className="mobile-new-scenario-btn" onClick={handleNewScenario} aria-label="New Scenario">
+              <span className="icon">↻</span>
+              <span className="label">New Scenario</span>
+            </button>
           )}
 
           {/* Desktop Side Actions */}

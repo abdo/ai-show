@@ -39,6 +39,31 @@
   transform: translateX(-4px);
 }
 
+.new-scenario-btn {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.new-scenario-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateX(4px);
+}
+
 /* Theatre Spotlights for Conversation Mode */
 .theatre-lights {
   position: fixed;
@@ -460,6 +485,39 @@
   fill: currentColor;
 }
 
+.mobile-new-scenario-btn {
+  display: none; /* Hidden by default, shown in media query */
+  position: fixed;
+  bottom: 2rem;
+  right: 1.5rem;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+
+.mobile-new-scenario-btn .icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.mobile-new-scenario-btn .label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  opacity: 0.7;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
 /* Responsive */
 @media (max-width: 1024px) { /* TABLET breakpoint */
   .desktop-only {
@@ -471,6 +529,10 @@
   }
 
   .mobile-bottom-controls {
+    display: flex;
+  }
+
+  .mobile-new-scenario-btn {
     display: flex;
   }
 
