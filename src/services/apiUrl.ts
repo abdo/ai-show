@@ -6,6 +6,6 @@ const apiUrl = import.meta.env.DEV
 // WebSocket server for voice chat
 export const talkWsUrl = import.meta.env.DEV
   ? "ws://localhost:3001/talk"
-  : "ws://function-bun-production-3d39.up.railway.app/talk";
+  : "wss://function-bun-production-3d39.up.railway.app/talk";
 
 export default apiUrl;
