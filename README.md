@@ -9,18 +9,18 @@ AI Show transforms your stories into theatrical performances through AI-generate
 - **Two Modes**: Story Mode (dramatic re-enactment) or Conversation Mode (dynamic discussion)
 - **AI-Powered**: Uses Groq AI for story generation and OpenAI TTS for voice synthesis
 - **Cinematic Visuals**: 3D ChromaGrid spotlight system that highlights speakers in real-time
+- **Real-Time Voice Chat**: English learning conversations with Deepgram voice agent
 
 ## 🛠️ Tech Stack
 
 **Frontend:** React 19, TypeScript, Vite, GSAP, OGL (WebGL)  
-**Backend:** Firebase Cloud Functions (Node.js 24), TypeScript
+**Backend:** Node.js + TypeScript (deployed as Bun on Railway)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js v24+
-- Firebase CLI: `npm install -g firebase-tools`
-- API Keys: [Groq](https://console.groq.com/keys), [OpenAI](https://platform.openai.com/api-keys)
+- Node.js v20+
+- API Keys: [Groq](https://console.groq.com/keys), [OpenAI](https://platform.openai.com/api-keys), [Deepgram](https://console.deepgram.com/)
 
 ### Installation
 
@@ -31,9 +31,9 @@ cd ai-show
 npm install
 
 # Install backend dependencies
-cd backend/functions
+cd server
 npm install
-cd ../..
+cd ..
 ```
 
 ### Configure Environment Variables
@@ -43,21 +43,23 @@ cd ../..
 VITE_POSTHOG_API_KEY=phc_...  # Optional analytics
 ```
 
-**Backend** (`backend/functions/.env`):
+**Backend** (`server/.env`):
 ```env
-GROQ_API_KEY=gsk_...          # Required
-OPENAI_TTS_API_KEY=sk-proj-... # Required
+GROQ_API_KEY=gsk_...           # Required for story generation
+OPENAI_TTS_API_KEY=sk-proj-... # Required for voice synthesis
+DEEPGRAM_KEY=...               # Required for voice chat
+PORT=3001                      # Optional, defaults to 3001
 ```
 
 ### Run Locally
 
-**Option 1: Single Command (Recommended)**
 ```bash
 npm run dev
 ```
-This runs both frontend and backend concurrently in one terminal.
 
-**Option 2: Separate Terminals**
+This runs both frontend (`:5173`) and backend (`:3001`) concurrently.
+
+**Separate terminals:**
 ```bash
 # Terminal 1: Frontend
 npm run dev:frontend
@@ -66,13 +68,10 @@ npm run dev:frontend
 npm run dev:backend
 ```
 
-Frontend: `http://localhost:5173`  
-Backend: `http://localhost:5000`
-
 > [!TIP]
-> **Quick Environment Check**: Before starting, verify these files have the correct dev URLs:
-> - Frontend: `src/services/apiUrl.ts` → Should point to `http://localhost:5000/ai-show-afb45/us-central1/getShow` (or the url of the running firebase function)
-> - Backend: `backend/functions/src/allowedOrigins.ts` → Should include `http://localhost:5173` (or the url of the running frontend project)
+> **Quick Environment Check**: 
+> - Frontend: `src/services/apiUrl.ts` → Should point to `http://localhost:3001/getShow`
+> - Backend: Ensure `.env` has all required API keys
 
 ## 📁 Project Structure
 
@@ -84,15 +83,19 @@ ai-show/
 │   ├── services/            # API client
 │   └── hooks/               # Custom hooks
 │
-├── backend/functions/
-│   └── src/
-│       ├── controllers/     # Request handlers
-│       ├── services/        # Business logic (story/voice)
-│       ├── constants/       # Prompts and character data
-│       └── config.ts        # Environment config loader
+├── server/                  # Node.js backend
+│   ├── getShow-node.ts      # Story generation service
+│   ├── talk-node.ts         # WebSocket voice chat
+│   ├── server.ts            # Main server
+│   ├── getShow-bun.ts       # Bun deployment version
+│   └── talk-bun.ts          # Bun WebSocket version
 │
 └── package.json             # Frontend dependencies
 ```
+
+## 🚀 Deployment
+
+The backend is deployed to Railway using Bun runtime for optimal performance. The `-bun.ts` files are standalone versions optimized for Bun deployment.
 
 ## 📝 License
 

@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { PostHogProvider } from 'posthog-js/react'
 import posthog from 'posthog-js'
@@ -20,17 +19,15 @@ if (posthogApiKey && !posthogApiKey.includes("...")) {
 const isPostHogEnabled = posthogApiKey && !posthogApiKey.includes("...");
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {isPostHogEnabled ? (
-      <PostHogProvider client={posthog}>
-        <App />
-        <SpeedInsights />
-      </PostHogProvider>
-    ) : (
-      <>
-        <App />
-        <SpeedInsights />
-      </>
-    )}
-  </StrictMode>,
+  isPostHogEnabled ? (
+    <PostHogProvider client={posthog}>
+      <App />
+      <SpeedInsights />
+    </PostHogProvider>
+  ) : (
+    <>
+      <App />
+      <SpeedInsights />
+    </>
+  )
 )

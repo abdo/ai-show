@@ -72,18 +72,20 @@ export function LandingPage() {
             Turn any situation into a cinematic conversation. Watch as AI
             characters debate, connect, and challenge each other with distinct personalities.
           </p>
-          <button
-            className="hero-cta"
-            onClick={() => {
-              document
-                .querySelector(".input-section")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-            aria-label="Scroll to create your show"
-          >
-            Create Your Show
-            <span className="cta-arrow" aria-hidden="true">👇</span>
-          </button>
+          <div className="hero-buttons">
+            <button
+              className="hero-cta"
+              onClick={() => {
+                document
+                  .querySelector(".input-section")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
+              aria-label="Scroll to create your show"
+            >
+              Create Your Show
+              <span className="cta-arrow" aria-hidden="true">👇</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -136,6 +138,8 @@ export function LandingPage() {
             >
               Start the Show <span aria-hidden="true">🎭</span>
             </button>
+
+
             
             <ModeSwitch
               isConversationMode={isConversationMode}
