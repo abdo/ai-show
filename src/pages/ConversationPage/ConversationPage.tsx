@@ -73,10 +73,10 @@ export function ConversationPage() {
       <div className="info-section">
         <h1 className="ai-name">Joe</h1>
         <p className="status-text">
-          {state === 'listening' && "Listening..."}
-          {state === 'speaking' && "Speaking..."}
-          {state === 'idle' && isConnected && "Waiting..."}
           {!isConnected && "Connecting..."}
+          {isConnected && state === 'listening' && "Listening..."}
+          {isConnected && state === 'speaking' && "Speaking..."}
+          {isConnected && state === 'idle' && "Waiting..."}
         </p>
       </div>
 

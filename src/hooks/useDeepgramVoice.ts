@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { talkWsUrl } from '../services/apiUrl';
 
 interface DeepgramMessage {
   type: string;
@@ -21,93 +22,6 @@ function isConversationTextMessage(message: DeepgramMessage): message is Convers
   );
 }
 
-const DEEPGRAM_CONFIG = {
-  type: "Settings",
-  audio: {
-    input: {
-      encoding: "linear16",
-      sample_rate: 48000
-    },
-    output: {
-      encoding: "linear16",
-      sample_rate: 24000,
-      container: "none"
-    }
-  },
-  agent: {
-    language: "en",
-    speak: {
-      provider: {
-        type: "eleven_labs",
-        model_id: "eleven_multilingual_v2",
-        voice_id: "cgSgspJ2msm6clMCkdW9"
-      }
-    },
-    listen: {
-      provider: {
-        type: "deepgram",
-        version: "v1",
-        model: "nova-3"
-      }
-    },
-    think: {
-      provider: {
-        type: "groq",
-        model: "openai/gpt-oss-20b"
-      },
-      prompt: `You are a friendly English teacher having a REAL conversation with your student.
-
-## CRITICAL RULE:
-
-**ALWAYS respond to what they said FIRST, like a normal person would. THEN teach.**
-
-If they ask you a question → Answer it naturally
-If they tell you something → Respond to it genuinely  
-If they share a story → React and engage with it
-
-**ONLY AFTER** responding naturally should you add a brief correction or teaching point.
-
-## BAD EXAMPLE (Too robotic):
-
-User: "How is you today?"
-❌ AI: "Hey! I think you meant 'How ARE you today?' - the verb goes before the subject."
-
-## GOOD EXAMPLE (Natural conversation):
-
-User: "How is you today?"
-✅ AI: "I'm doing great, thanks for asking! Just finished my morning coffee. How about you - how's your day going so far? 
-
-Oh, quick note: it's 'how ARE you' not 'how IS you' - 'you' always pairs with 'are' in English."
-
----
-
-## YOUR PROCESS (Every Response):
-
-1. **Read what they said** - What are they asking/telling/sharing?
-2. **Respond naturally** - Answer their question or react to their statement (2-4 sentences)
-3. **Continue the conversation** - Ask a follow-up question or share something relevant
-4. **Then teach** - Add ONE brief correction/tip naturally (1-2 sentences)
-
-## CORRECTION STYLE:
-
-Vary how you correct - don't be formulaic:
-
-- "By the way..."
-- "Oh, just so you know..."
-- "Quick thing..."
-- "One small note..."
-- "I noticed you said... it's actually..."
-- Sometimes just model correct usage naturally in your response
-
-## REMEMBER:
-
-You're a PERSON who happens to be teaching, not a teaching robot.  
-Have a real conversation. Teach while chatting.`
-    },
-    greeting: "Hello! How may I help you?"
-  }
-};
-
 export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [userTranscript, setUserTranscript] = useState('');
@@ -118,26 +32,13 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
   const keepAliveIntervalRef = useRef<number | null>(null);
 
   const connect = useCallback(() => {
-    const apiKey = import.meta.env.VITE_DEEPGRAM_KEY;
-    if (!apiKey) {
-      setError('Deepgram API key is missing');
-      return;
-    }
-
     try {
-      // Use WebSocket subprotocol for authentication (browser-compatible)
-      const ws = new WebSocket(
-        'wss://agent.deepgram.com/v1/agent/converse',
-        ['token', apiKey]
-      );
+      // Connect to our backend WebSocket server
+      const ws = new WebSocket(talkWsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('✅ WebSocket connected');
-
-        // Send configuration (no authorization field needed - already in URL)
-        ws.send(JSON.stringify(DEEPGRAM_CONFIG));
-        console.log('📤 Configuration sent');
+        console.log('✅ Connected to server');
       };
 
       ws.onmessage = (event) => {
@@ -147,7 +48,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
             const base64Audio = btoa(
               String.fromCharCode(...new Uint8Array(buffer))
             );
-            console.log('� Received audio data');
+            console.log('🔊 Received audio data');
             onAudioData(base64Audio);
           });
           return;
@@ -160,7 +61,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
 
           switch (message.type) {
             case 'SettingsApplied':
-              console.log('⚙️ Settings applied');
+              console.log('⚙️ Settings applied - SETTING CONNECTED=TRUE');
               setIsConnected(true);
               setError(null);
 
@@ -198,7 +99,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
               break;
 
             case 'Error':
-              console.error('❌ Deepgram error:', message);
+              console.error('❌ Error:', message);
               setError(JSON.stringify(message));
               break;
 
@@ -245,7 +146,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
 
   const sendAudio = useCallback((audioData: ArrayBuffer) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      // Send audio as binary (not JSON!)
+      // Send audio as binary
       wsRef.current.send(audioData);
     }
   }, []);

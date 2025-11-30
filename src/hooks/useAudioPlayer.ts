@@ -24,6 +24,12 @@ export function useAudioPlayer() {
         bytes[i] = binaryString.charCodeAt(i);
       }
 
+      // Skip if data is too small to be valid audio
+      if (bytes.length < 2) {
+        console.warn('Audio chunk too small, skipping');
+        return;
+      }
+
       // Store the chunk
       audioChunksRef.current.push(bytes.buffer);
 
@@ -35,8 +41,9 @@ export function useAudioPlayer() {
 
       const audioContext = audioContextRef.current;
 
-      // Convert to Int16Array (linear16)
-      const int16Array = new Int16Array(bytes.buffer);
+      // Convert to Int16Array (linear16) - handle odd lengths by truncating
+      const int16Length = Math.floor(bytes.length / 2);
+      const int16Array = new Int16Array(bytes.buffer, 0, int16Length);
 
       // Convert to Float32Array
       const float32Array = int16ToFloat32(int16Array);

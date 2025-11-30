@@ -170,6 +170,13 @@
   line-height: 1.6;
 }
 
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
 .hero-cta {
   background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
   color: white;
