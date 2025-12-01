@@ -1,11 +1,11 @@
-// Slim server wrapper - delegates to talk-node and getShow-node
+// Slim server wrapper - delegates to talk and getShow
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
-import { handleGetShow } from './getShow-node';
-import { setupWebSocket } from './talk-node';
+import { handleGetShow } from './getShow';
+import { setupWebSocket } from './talk';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,24 +19,19 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'ai-show-server' });
 });
 
-// POST /getShow - Delegates to getShow-node
+// POST /getShow - Delegates to getShow handler
 app.post('/getShow', async (req: Request, res: Response) => {
   try {
-    const { userInput, userName, mode } = req.body;
-
-    if (!userInput) {
-      return res.status(400).json({ error: 'userInput is required' });
-    }
-
-    console.log('[getShow] Request received');
-    const result = await handleGetShow(userInput, userName, mode);
+    const result = await handleGetShow(req.body);
     res.json(result);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-    console.error('[getShow] Error:', errorMessage);
-    res.status(500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const statusCode = errorMessage.includes('required') || errorMessage.includes('missing') ? 400 : 500;
+
+    console.error('[server] /getShow error:', errorMessage);
+    res.status(statusCode).json({
       error: {
-        code: 'INTERNAL_SERVER_ERROR',
+        code: statusCode === 400 ? 'BAD_REQUEST' : 'INTERNAL_SERVER_ERROR',
         message: errorMessage,
       },
     });
@@ -46,7 +41,7 @@ app.post('/getShow', async (req: Request, res: Response) => {
 // Create HTTP server
 const server = http.createServer(app);
 
-// WebSocket /talk - Delegates to talk-node
+// WebSocket /talk - Delegates to talk
 const wss = new WebSocketServer({ server, path: '/talk' });
 setupWebSocket(wss);
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// getShow-node.ts - Complete TypeScript server for AI Show Generation
+// getShow.ts - Complete TypeScript server for AI Show Generation
 // ============================================================================
 
 import 'dotenv/config';
@@ -642,10 +642,14 @@ async function generateVoices(story: StoryData): Promise<Record<number, string>>
 // ============================================================================
 
 export async function handleGetShow(
-  userInput: string,
-  userName?: string,
-  mode?: 'conversation' | 'story'
+  body: { userInput?: string; userName?: string; mode?: 'conversation' | 'story' }
 ): Promise<{ story: StoryData; audioMap: Record<number, string> }> {
+  // Validation
+  if (!body.userInput) {
+    throw new Error('userInput is required');
+  }
+
+  const { userInput, userName, mode } = body;
   console.log('[getShow] Starting generation...', { userInput, userName, mode });
 
   const story = await generateStory(userInput, userName, mode);

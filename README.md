@@ -84,8 +84,8 @@ ai-show/
 │   └── hooks/               # Custom hooks
 │
 ├── server/                  # Node.js backend
-│   ├── getShow-node.ts      # Story generation service
-│   ├── talk-node.ts         # WebSocket voice chat
+│   ├── getShow.ts           # Story generation service
+│   ├── talk.ts              # WebSocket voice chat
 │   ├── server.ts            # Main server
 │   ├── getShow-bun.ts       # Bun deployment version
 │   └── talk-bun.ts          # Bun WebSocket version
