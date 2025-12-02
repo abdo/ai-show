@@ -85,7 +85,8 @@ const OPENAI_TTS_API_KEY = process.env.OPENAI_TTS_API_KEY;
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "https://ai-show-theta.vercel.app",
-  "https://aishow.studio"
+  "https://aishow.studio",
+  "https://interviews.aishow.studio"
 ];
 
 // ============================================================================
