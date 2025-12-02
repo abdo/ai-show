@@ -228,11 +228,20 @@
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .conversation-page {
-    flex-direction: column;
+    /* Lock the container to the viewport to prevent body scroll */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 100dvh;
     width: 100%;
+    z-index: 50; /* Ensure it stays on top */
+    
+    /* Flex layout for children */
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    position: static;
   }
 
   /* Header / Sidebar */
@@ -248,9 +257,9 @@
     border-right: none;
     border-bottom: 1px solid #334155;
     flex-shrink: 0;
-    position: static;
-    z-index: 20;
+    position: relative; /* Natural flow */
     background: #1e293b;
+    z-index: 20;
   }
 
   .interviewer-profile {
@@ -263,8 +272,8 @@
   }
 
   .avatar-container {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     margin: 0;
     flex-shrink: 0;
   }
@@ -298,22 +307,20 @@
   .chat-area {
     flex: 1;
     width: 100%;
-    height: auto;
-    min-height: 0; /* Crucial for nested flex scrolling */
+    height: 100%; /* Fill remaining space */
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    position: static;
-    padding: 0;
-    margin: 0;
+    position: relative;
     overflow: hidden;
   }
 
   .messages-list {
     flex: 1;
-    height: auto;
     width: 100%;
+    height: 100%;
     padding: 1rem;
-    padding-bottom: 2rem;
+    padding-bottom: 2rem; /* Extra padding for bottom */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     margin: 0;
