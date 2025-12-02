@@ -1,11 +1,10 @@
 // Automatically switch between local and production based on environment
-const apiUrl = import.meta.env.DEV
-  ? "http://localhost:3001/getShow"
-  : "https://getshow-production.up.railway.app/getShow";
+export const jobsApiUrl = import.meta.env.DEV
+  ? "http://localhost:3001/jobs/autocomplete"
+  : "https://jobs-autocomplete-production.up.railway.app/jobs/autocomplete";
 
-// WebSocket server for voice chat
-export const talkWsUrl = import.meta.env.DEV
-  ? "ws://localhost:3001/talk"
-  : "wss://function-bun-production-3d39.up.railway.app/talk";
+// WebSocket server for interview
+export const interviewWsUrl = import.meta.env.DEV
+  ? "ws://localhost:3001/interview"
+  : "wss://interview-production-189c.up.railway.app/interview";
 
-export default apiUrl;

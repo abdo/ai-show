@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { talkWsUrl } from '../services/apiUrl';
+import { interviewWsUrl } from '../services/apiUrl';
 
 interface DeepgramMessage {
   type: string;
@@ -22,19 +22,32 @@ function isConversationTextMessage(message: DeepgramMessage): message is Convers
   );
 }
 
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
 export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
   const [isConnected, setIsConnected] = useState(false);
-  const [userTranscript, setUserTranscript] = useState('');
-  const [agentResponse, setAgentResponse] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const keepAliveIntervalRef = useRef<number | null>(null);
 
-  const connect = useCallback(() => {
+  const connect = useCallback((role: string, interviewerName?: string) => {
     try {
-      // Connect to our backend WebSocket server
-      const ws = new WebSocket(talkWsUrl);
+      // Build WebSocket URL with role query parameter
+      let wsUrl = `${interviewWsUrl}?role=${encodeURIComponent(role)}`;
+      if (interviewerName) {
+        wsUrl += `&interviewerName=${encodeURIComponent(interviewerName)}`;
+      }
+
+      console.log('🔌 Connecting to interview WebSocket:', wsUrl);
+
+      // Connect to interview WebSocket server
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -80,18 +93,19 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
 
             case 'ConversationText': {
               if (isConversationTextMessage(message)) {
-                if (message.role === 'user') {
-                  setUserTranscript(message.content);
-                } else if (message.role === 'assistant') {
-                  setAgentResponse(message.content);
-                }
+                const newMessage: Message = {
+                  role: message.role as 'user' | 'assistant',
+                  content: message.content,
+                  timestamp: Date.now(),
+                };
+
+                setMessages(prev => [...prev, newMessage]);
               }
               break;
             }
 
             case 'UserStartedSpeaking':
               console.log('🎤 User started speaking');
-              setUserTranscript('');
               break;
 
             case 'AgentStartedSpeaking':
@@ -140,8 +154,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
       keepAliveIntervalRef.current = null;
     }
     setIsConnected(false);
-    setUserTranscript('');
-    setAgentResponse('');
+    setMessages([]);
   }, []);
 
   const sendAudio = useCallback((audioData: ArrayBuffer) => {
@@ -163,8 +176,7 @@ export function useDeepgramVoice(onAudioData: (base64Audio: string) => void) {
     disconnect,
     sendAudio,
     isConnected,
-    userTranscript,
-    agentResponse,
+    messages,
     error
   };
 }

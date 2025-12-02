@@ -65,9 +65,12 @@ ai-show/
 │   │   ├── getShow/
 │   │   │   ├── getShow.ts           # Story generation (Node.js)
 │   │   │   └── getShow-bun.ts       # Story generation (Bun)
-│   │   └── talk/
-│   │       ├── talk.ts              # WebSocket proxy (Node.js)
-│   │       └── talk-bun.ts          # WebSocket proxy (Bun)
+│   │   ├── talk/
+│   │   │   ├── talk.ts              # Voice chat WebSocket (Node.js)
+│   │   │   └── talk-bun.ts          # Voice chat WebSocket (Bun)
+│   │   └── interview/
+│   │       ├── interview.ts         # Interview WebSocket (Node.js)
+│   │       └── interview-bun.ts     # Interview WebSocket (Bun)
 │   └── .env                         # Backend environment variables
 │
 ├── .env                             # Frontend env vars
@@ -150,6 +153,19 @@ PORT=3001                         # Optional, defaults to 3001
    └─ Proxies to Deepgram Voice Agent with custom config
 3. Real-time bidirectional audio streaming
 4. Deepgram handles STT → LLM → TTS pipeline
+```
+
+### Interview Mode
+```
+1. User connects to /interview WebSocket with role parameter
+   Example: ws://localhost:3001/interview?role=Software%20Engineer
+2. Backend (server.ts delegates to handlers/interview/interview.ts)
+   ├─ Validates role parameter (required)
+   ├─ Calls Groq API (openai/gpt-oss-120b) to generate interviewer prompt
+   │  └─ Meta-prompt creates Kevin Mccanly interviewer with 100 questions
+   └─ Connects to Deepgram with generated prompt + custom greeting
+3. Real-time interview conversation
+4. Interviewer provides feedback at end
 ```
 
 ---

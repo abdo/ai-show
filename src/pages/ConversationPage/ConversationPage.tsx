@@ -1,15 +1,31 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDeepgramVoice } from '../../hooks/useDeepgramVoice';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 import './ConversationPage.css';
 
-// Avatar for Joe
-const JOE_AVATAR = "https://i.pravatar.cc/300?img=11";
+// Avatar for the interviewer
+const INTERVIEWER_AVATAR_MALE = "https://i.ibb.co/z09VvvW/interviewer-male.webp";
+const INTERVIEWER_AVATAR_FEMALE = "https://i.ibb.co/v5Dmy6b/interviewer-female.webp";
+
+const INTERVIEWERS = [
+  "Kevin McCannly",
+  "Michael Crickett",
+  "Tom Bradshaw",
+  "Lauren Ashford"
+];
 
 export function ConversationPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Select random interviewer on mount
+  const [interviewerName] = useState(() => {
+    return INTERVIEWERS[Math.floor(Math.random() * INTERVIEWERS.length)];
+  });
   
   const { playAudio, stop, isPlaying } = useAudioPlayer();
   const { startRecording, stopRecording, isRecording } = useAudioRecorder();
@@ -18,10 +34,21 @@ export function ConversationPage() {
     disconnect, 
     sendAudio, 
     isConnected,
-    userTranscript,
-    agentResponse,
+    messages,
     error 
   } = useDeepgramVoice(playAudio);
+
+  // Redirect if no role provided
+  useEffect(() => {
+    if (!role) {
+      navigate('/', { replace: true });
+    }
+  }, [role, navigate]);
+
+  // Auto-scroll to bottom of transcript
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Determine current state
   const getState = () => {
@@ -42,7 +69,10 @@ export function ConversationPage() {
   // Auto-start call when page loads
   useEffect(() => {
     const startCall = async () => {
-      connect();
+      if (!role) return;
+      
+      // Connect to interview endpoint with role and selected interviewer
+      connect(role, interviewerName);
       
       // Wait for connection then start recording
       setTimeout(async () => {
@@ -65,51 +95,67 @@ export function ConversationPage() {
 
   return (
     <div className="conversation-page">
-      <div className="avatar-container">
-        <div className={`avatar-ring ${state}`}></div>
-        <img src={JOE_AVATAR} alt="Joe" className="avatar-img" />
-      </div>
-
-      <div className="info-section">
-        <h1 className="ai-name">Joe</h1>
-        <p className="status-text">
-          {!isConnected && "Connecting..."}
-          {isConnected && state === 'listening' && "Listening..."}
-          {isConnected && state === 'speaking' && "Speaking..."}
-          {isConnected && state === 'idle' && "Waiting..."}
-        </p>
-      </div>
-
-      {/* Transcript Display */}
-      {(userTranscript || agentResponse) && (
-        <div className="transcript-section">
-          {userTranscript && (
-            <div className="transcript-item user">
-              <span className="role">You:</span>
-              <span className="text">"{userTranscript}"</span>
-            </div>
-          )}
-          {agentResponse && (
-            <div className="transcript-item agent">
-              <span className="role">Joe:</span>
-              <span className="text">"{agentResponse}"</span>
-            </div>
-          )}
+      {/* Sidebar / Info Panel */}
+      <aside className="interview-sidebar">
+        <div className="interviewer-profile">
+          <div className={`avatar-container ${state}`}>
+            <img 
+              src={interviewerName === "Lauren Ashford" ? INTERVIEWER_AVATAR_FEMALE : INTERVIEWER_AVATAR_MALE} 
+              alt="Interviewer" 
+              className="avatar-img" 
+            />
+          </div>
+          <h2 className="interviewer-name">{interviewerName}</h2>
+          <p className="interview-role">{role} Interview</p>
         </div>
-      )}
 
-      {/* Error Display */}
-      {error && (
-        <div className="error-message">
-          Error: {error}
+        <div className="connection-status">
+          <div className={`status-dot ${isConnected ? 'connected' : 'connecting'}`}></div>
+          <span className="status-text">
+            {!isConnected && "Connecting..."}
+            {isConnected && state === 'listening' && "Listening..."}
+            {isConnected && state === 'speaking' && "Speaking..."}
+            {isConnected && state === 'idle' && "Connected"}
+          </span>
         </div>
-      )}
 
-      <div className="controls">
-        <button className="call-btn end" onClick={handleEnd}>
-          End Call ❌
+        <button className="end-call-btn" onClick={handleEnd}>
+          End Interview
         </button>
-      </div>
+      </aside>
+
+      {/* Main Chat Area */}
+      <main className="chat-area">
+        <div className="messages-list">
+          {messages.length === 0 && (
+            <div className="empty-state">
+              <p>The interview is starting...</p>
+              <p className="sub-text">Please allow microphone access if prompted.</p>
+            </div>
+          )}
+          
+          {messages.map((msg, index) => (
+            <div key={index} className={`message-bubble ${msg.role}`}>
+              <div className="message-header">
+                <span className="message-sender">
+                  {msg.role === 'user' ? 'You' : 'Interviewer'}
+                </span>
+                <span className="message-time">
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <p className="message-content">{msg.content}</p>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {error && (
+          <div className="error-banner">
+            Error: {error}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
