@@ -284,8 +284,12 @@
     font-size: 0.8rem;
   }
 
+  .chat-area {
+    overflow: hidden;
+  }
+
   .messages-list {
-    padding: 1rem;
+    padding: 1rem 1rem 4rem;
     margin-top: 8rem;
     min-height: fill-available;
   }
